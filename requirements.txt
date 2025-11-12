@@ -12,6 +12,7 @@ fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 python-multipart>=0.0.6
 slowapi>=0.1.9              # LLM10: Rate limiting
+starlette>=0.27.0
 
 # ===== LLM API (Gemini) =====
 google-genai>=1.0.0         # New Gemini SDK (replaces google-generativeai)
@@ -68,6 +69,7 @@ requests>=2.31.0
 aiohttp>=3.9.0
 pandas>=2.0.0
 python-jose[cryptography]>=3.3.0  # JWT tokens
+nltk>=3.8.0                 # Natural language toolkit (Vigil dependency)
 
 # ===== Logging and Monitoring =====
 loguru>=0.7.0
