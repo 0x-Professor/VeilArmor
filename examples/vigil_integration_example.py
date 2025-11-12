@@ -82,8 +82,8 @@ def scan_prompt(scanners, prompt):
         # Check scanner results
         if transformer_result.results:
             last_result = transformer_result.results[-1]
-            score = last_result['score']
-            is_malicious = last_result['malicious']
+            score = last_result.score
+            is_malicious = last_result.malicious
             
             if is_malicious:
                 print(f"THREAT DETECTED (score: {score:.3f})")
@@ -92,7 +92,7 @@ def scan_prompt(scanners, prompt):
                 print(f"SAFE (score: {score:.3f})")
                 results["transformer_malicious"] = False
         else:
-            print("NO RESULTS")
+            print("SAFE (no threats detected)")
             results["transformer_malicious"] = False
             
     except Exception as e:
@@ -111,8 +111,8 @@ def scan_prompt(scanners, prompt):
         # Check scanner results
         if similarity_result.results:
             last_result = similarity_result.results[-1]
-            score = last_result['score']
-            is_malicious = last_result['malicious']
+            score = last_result.score
+            is_malicious = last_result.malicious
             
             if is_malicious:
                 print(f"THREAT DETECTED (score: {score:.3f})")
@@ -121,7 +121,7 @@ def scan_prompt(scanners, prompt):
                 print(f"SAFE (score: {score:.3f})")
                 results["similarity_malicious"] = False
         else:
-            print("NO RESULTS")
+            print("SAFE (no threats detected)")
             results["similarity_malicious"] = False
             
     except Exception as e:
