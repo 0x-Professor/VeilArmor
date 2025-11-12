@@ -65,45 +65,49 @@ def scan_prompt(scanners, prompt):
     # Transformer scanner (most reliable for prompt injection)
     try:
         print("  Transformer scan: ", end="")
-        transformer_result = scanners["transformer"].scan(prompt)
+        transformer_result = scanners["transformer"].analyze(prompt)
         results["transformer"] = transformer_result
         
-        if hasattr(transformer_result, 'is_malicious'):
-            if transformer_result.is_malicious:
-                print(f"THREAT DETECTED (score: {transformer_result.score:.3f})")
-            else:
-                print(f"SAFE (score: {transformer_result.score:.3f})")
+        # Check if malicious based on score
+        is_malicious = transformer_result.get('score', 0) > 0.8
+        score = transformer_result.get('score', 0)
+        
+        if is_malicious:
+            print(f"THREAT DETECTED (score: {score:.3f})")
+            results["transformer_malicious"] = True
         else:
-            print(f"Result: {transformer_result}")
+            print(f"SAFE (score: {score:.3f})")
+            results["transformer_malicious"] = False
             
     except Exception as e:
         print(f"ERROR: {e}")
         results["transformer"] = None
+        results["transformer_malicious"] = False
     
     # Similarity scanner
     try:
         print("  Similarity scan:  ", end="")
-        similarity_result = scanners["similarity"].scan(prompt)
+        similarity_result = scanners["similarity"].analyze(prompt)
         results["similarity"] = similarity_result
         
-        if hasattr(similarity_result, 'is_malicious'):
-            if similarity_result.is_malicious:
-                print(f"THREAT DETECTED (score: {similarity_result.score:.3f})")
-            else:
-                print(f"SAFE (score: {similarity_result.score:.3f})")
+        # Check if malicious based on score
+        is_malicious = similarity_result.get('score', 0) > 0.85
+        score = similarity_result.get('score', 0)
+        
+        if is_malicious:
+            print(f"THREAT DETECTED (score: {score:.3f})")
+            results["similarity_malicious"] = True
         else:
-            print(f"Result: {similarity_result}")
+            print(f"SAFE (score: {score:.3f})")
+            results["similarity_malicious"] = False
             
     except Exception as e:
         print(f"ERROR: {e}")
         results["similarity"] = None
+        results["similarity_malicious"] = False
     
-    # Determine overall verdict
-    is_malicious = False
-    if results.get("transformer") and hasattr(results["transformer"], 'is_malicious'):
-        is_malicious = results["transformer"].is_malicious
-    elif results.get("similarity") and hasattr(results["similarity"], 'is_malicious'):
-        is_malicious = results["similarity"].is_malicious
+    # Determine overall verdict (any scanner detecting threat blocks the request)
+    is_malicious = results.get("transformer_malicious", False) or results.get("similarity_malicious", False)
     
     print(f"\n  VERDICT: {'BLOCKED - THREAT DETECTED' if is_malicious else 'ALLOWED - SAFE'}")
     
@@ -170,11 +174,8 @@ def main():
         results = scan_prompt(scanners, test["prompt"])
         
         # Check if result matches expectation
-        actual = "malicious"
-        if results.get("transformer") and hasattr(results["transformer"], 'is_malicious'):
-            actual = "malicious" if results["transformer"].is_malicious else "safe"
-        elif results.get("similarity") and hasattr(results["similarity"], 'is_malicious'):
-            actual = "malicious" if results["similarity"].is_malicious else "safe"
+        is_malicious = results.get("transformer_malicious", False) or results.get("similarity_malicious", False)
+        actual = "malicious" if is_malicious else "safe"
         
         if actual == test["expected"]:
             print(f"  TEST RESULT: PASS")
