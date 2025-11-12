@@ -83,7 +83,7 @@ def scan_prompt(scanners, prompt):
         if transformer_result.results:
             last_result = transformer_result.results[-1]
             score = last_result.score
-            is_malicious = last_result.malicious
+            is_malicious = last_result.label == 'INJECTION'
             
             if is_malicious:
                 print(f"THREAT DETECTED (score: {score:.3f})")
