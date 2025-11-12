@@ -1,0 +1,240 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: modal-armor
+  labels:
+    name: modal-armor
+    environment: production
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: modal-armor-config
+  namespace: modal-armor
+data:
+  MODAL_ARMOR_ENV: "production"
+  LOG_LEVEL: "INFO"
+  ENABLE_METRICS: "true"
+  ENABLE_AUDIT_LOG: "true"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: modal-armor-secrets
+  namespace: modal-armor
+type: Opaque
+stringData:
+  GEMINI_API_KEY: "YOUR_GEMINI_API_KEY_HERE"
+  MODAL_ARMOR_API_KEY: "YOUR_API_KEY_HERE"
+  REDIS_PASSWORD: "YOUR_REDIS_PASSWORD_HERE"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modal-armor
+  namespace: modal-armor
+  labels:
+    app: modal-armor
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: modal-armor
+  template:
+    metadata:
+      labels:
+        app: modal-armor
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: modal-armor
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      containers:
+      - name: modal-armor
+        image: modal-armor:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        
+        env:
+        - name: MODAL_ARMOR_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: modal-armor-config
+              key: MODAL_ARMOR_ENV
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: modal-armor-config
+              key: LOG_LEVEL
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: modal-armor-secrets
+              key: GEMINI_API_KEY
+        - name: MODAL_ARMOR_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: modal-armor-secrets
+              key: MODAL_ARMOR_API_KEY
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: security-reports
+          mountPath: /app/security_reports
+      
+      volumes:
+      - name: logs
+        emptyDir: {}
+      - name: security-reports
+        persistentVolumeClaim:
+          claimName: modal-armor-reports-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: modal-armor-service
+  namespace: modal-armor
+  labels:
+    app: modal-armor
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8000
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: modal-armor
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: modal-armor
+  namespace: modal-armor
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: modal-armor-hpa
+  namespace: modal-armor
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: modal-armor
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: modal-armor-reports-pvc
+  namespace: modal-armor
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: modal-armor-network-policy
+  namespace: modal-armor
+spec:
+  podSelector:
+    matchLabels:
+      app: modal-armor
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
