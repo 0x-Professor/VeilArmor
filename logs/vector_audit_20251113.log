@@ -17,3 +17,13 @@
 2025-11-13 00:22:12 | INFO | DENIED | User: internal_user | Action: read | Resource: secret_docs
 2025-11-13 00:22:12 | INFO | ALLOWED | User: admin_user | Action: read | Resource: secret_docs
 2025-11-13 00:22:12 | INFO | ALLOWED | User: admin_user | Action: query | Resource: secret_docs
+2025-11-13 00:28:34 | INFO | ALLOWED | User: admin | Action: write | Resource: public_docs
+2025-11-13 00:28:35 | INFO | ALLOWED | User: admin | Action: add | Resource: public_docs
+2025-11-13 00:28:35 | INFO | ALLOWED | User: admin | Action: write | Resource: internal_docs
+2025-11-13 00:28:35 | INFO | ALLOWED | User: admin | Action: add | Resource: internal_docs
+2025-11-13 00:28:35 | INFO | ALLOWED | User: admin | Action: write | Resource: confidential_docs
+2025-11-13 00:28:36 | INFO | ALLOWED | User: admin | Action: add | Resource: confidential_docs
+2025-11-13 00:28:36 | INFO | ALLOWED | User: admin | Action: write | Resource: secret_docs
+2025-11-13 00:28:36 | INFO | ALLOWED | User: admin | Action: add | Resource: secret_docs
+2025-11-13 00:28:36 | INFO | ALLOWED | User: public_user | Action: read | Resource: public_docs
+2025-11-13 00:28:36 | INFO | ALLOWED | User: public_user | Action: query | Resource: public_docs
