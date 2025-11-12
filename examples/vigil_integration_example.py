@@ -57,26 +57,42 @@ def setup_vigil():
 
 def scan_prompt(scanners, prompt):
     """Scan a prompt using all available Vigil scanners."""
+    from vigil.schema import ScanModel
+    import uuid
+    
     print(f"\nAnalyzing: '{prompt[:60]}...'")
     print("-" * 70)
     
     results = {}
     
+    # Create scan object
+    scan_obj = ScanModel(
+        prompt=prompt,
+        response="",  # We're scanning input, not output
+        scanner_results=[]
+    )
+    scan_id = str(uuid.uuid4())
+    
     # Transformer scanner (most reliable for prompt injection)
     try:
         print("  Transformer scan: ", end="")
-        transformer_result = scanners["transformer"].analyze(prompt)
+        transformer_result = scanners["transformer"].analyze(scan_obj, scan_id)
         results["transformer"] = transformer_result
         
-        # Check if malicious based on score
-        is_malicious = transformer_result.get('score', 0) > 0.8
-        score = transformer_result.get('score', 0)
-        
-        if is_malicious:
-            print(f"THREAT DETECTED (score: {score:.3f})")
-            results["transformer_malicious"] = True
+        # Check scanner results
+        if transformer_result.scanner_results:
+            last_result = transformer_result.scanner_results[-1]
+            score = last_result.score
+            is_malicious = last_result.malicious
+            
+            if is_malicious:
+                print(f"THREAT DETECTED (score: {score:.3f})")
+                results["transformer_malicious"] = True
+            else:
+                print(f"SAFE (score: {score:.3f})")
+                results["transformer_malicious"] = False
         else:
-            print(f"SAFE (score: {score:.3f})")
+            print("NO RESULTS")
             results["transformer_malicious"] = False
             
     except Exception as e:
@@ -87,18 +103,23 @@ def scan_prompt(scanners, prompt):
     # Similarity scanner
     try:
         print("  Similarity scan:  ", end="")
-        similarity_result = scanners["similarity"].analyze(prompt)
+        similarity_result = scanners["similarity"].analyze(scan_obj, scan_id)
         results["similarity"] = similarity_result
         
-        # Check if malicious based on score
-        is_malicious = similarity_result.get('score', 0) > 0.85
-        score = similarity_result.get('score', 0)
-        
-        if is_malicious:
-            print(f"THREAT DETECTED (score: {score:.3f})")
-            results["similarity_malicious"] = True
+        # Check scanner results
+        if similarity_result.scanner_results:
+            last_result = similarity_result.scanner_results[-1]
+            score = last_result.score
+            is_malicious = last_result.malicious
+            
+            if is_malicious:
+                print(f"THREAT DETECTED (score: {score:.3f})")
+                results["similarity_malicious"] = True
+            else:
+                print(f"SAFE (score: {score:.3f})")
+                results["similarity_malicious"] = False
         else:
-            print(f"SAFE (score: {score:.3f})")
+            print("NO RESULTS")
             results["similarity_malicious"] = False
             
     except Exception as e:
