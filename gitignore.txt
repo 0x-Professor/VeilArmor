@@ -1,0 +1,36 @@
+# Modal Armor - gitignore
+
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+
+# Logs and data
+logs/
+*.log
+data/vectordb/
+data/canary_tokens.db
+*.db
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db
