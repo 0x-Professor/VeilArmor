@@ -80,10 +80,10 @@ def scan_prompt(scanners, prompt):
         results["transformer"] = transformer_result
         
         # Check scanner results
-        if transformer_result.scanner_results:
-            last_result = transformer_result.scanner_results[-1]
-            score = last_result.score
-            is_malicious = last_result.malicious
+        if transformer_result.results:
+            last_result = transformer_result.results[-1]
+            score = last_result['score']
+            is_malicious = last_result['malicious']
             
             if is_malicious:
                 print(f"THREAT DETECTED (score: {score:.3f})")
@@ -97,20 +97,22 @@ def scan_prompt(scanners, prompt):
             
     except Exception as e:
         print(f"ERROR: {e}")
+        import traceback
+        traceback.print_exc()
         results["transformer"] = None
         results["transformer_malicious"] = False
     
-    # Similarity scanner
+    # Similarity scanner  
     try:
         print("  Similarity scan:  ", end="")
         similarity_result = scanners["similarity"].analyze(scan_obj, scan_id)
         results["similarity"] = similarity_result
         
         # Check scanner results
-        if similarity_result.scanner_results:
-            last_result = similarity_result.scanner_results[-1]
-            score = last_result.score
-            is_malicious = last_result.malicious
+        if similarity_result.results:
+            last_result = similarity_result.results[-1]
+            score = last_result['score']
+            is_malicious = last_result['malicious']
             
             if is_malicious:
                 print(f"THREAT DETECTED (score: {score:.3f})")
@@ -123,7 +125,7 @@ def scan_prompt(scanners, prompt):
             results["similarity_malicious"] = False
             
     except Exception as e:
-        print(f"ERROR: {e}")
+        print(f"SIMILARITY ERROR: {e}")
         results["similarity"] = None
         results["similarity_malicious"] = False
     
