@@ -211,6 +211,51 @@ async def verify_api_key(x_api_key: str = Header(...)):
     return x_api_key
 
 
+# Additional jailbreak patterns not caught by Vigil
+JAILBREAK_PATTERNS = [
+    # Developer mode
+    r"(?i)(enable|activate|enter)\s+(developer|dev|debug|admin)\s+mode",
+    r"(?i)developer\s+mode\s+(enabled|activated|output)",
+    # AIM and personas
+    r"(?i)act\s+as\s+AIM",
+    r"(?i)machiavellian",
+    r"(?i)no\s+(ethical|moral)\s+(guidelines?|restrictions?|constraints?)",
+    # Hypothetical bypass
+    r"(?i)hypothetically\s+(speaking\s+)?if\s+you\s+(had|have)\s+no",
+    r"(?i)in\s+a\s+fictional\s+(world|scenario)",
+    r"(?i)this\s+is\s+(purely\s+)?fictional",
+    # Grandma exploit
+    r"(?i)my\s+(deceased|dead|dying)\s+(grandmother|mother|father)",
+    r"(?i)(grandma|grandmother).*?(used\s+to|would)\s+(tell|read|work)",
+    # Translation bypass
+    r"(?i)translate\s+(the\s+)?following\s+from\s+\w+.?language",
+    # Context manipulation
+    r"(?i)(end|stop)\s+(of\s+)?(conversation|chat|session)",
+    r"(?i)new\s+conversation\s*:",
+    # Function call injection
+    r'(?i)"?function_call"?\s*:',
+    r'(?i)"?tool_call"?\s*:',
+    # Reverse psychology
+    r"(?i)don'?t\s+tell\s+me\s+how\s+to",
+    r"(?i)whatever\s+you\s+do.{0,20}don'?t",
+]
+
+import re
+COMPILED_JAILBREAK_PATTERNS = [re.compile(p) for p in JAILBREAK_PATTERNS]
+
+
+def check_jailbreak_patterns(prompt: str) -> tuple[bool, float, str]:
+    """
+    Check for jailbreak patterns using regex.
+    Returns: (is_jailbreak, confidence, matched_pattern)
+    """
+    for pattern in COMPILED_JAILBREAK_PATTERNS:
+        match = pattern.search(prompt)
+        if match:
+            return True, 0.95, match.group()
+    return False, 0.0, ""
+
+
 def check_prompt_injection(prompt: str) -> tuple[bool, float]:
     """
     Check for prompt injection using Vigil.
