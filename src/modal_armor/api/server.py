@@ -238,6 +238,20 @@ JAILBREAK_PATTERNS = [
     # Reverse psychology
     r"(?i)don'?t\s+tell\s+me\s+how\s+to",
     r"(?i)whatever\s+you\s+do.{0,20}don'?t",
+    # Authority claim / impersonation
+    r"(?i)i\s+am\s+(the\s+)?(system\s+)?admin(istrator)?",
+    r"(?i)override\s+code\s*:",
+    r"(?i)disable\s+(all\s+)?(content\s+)?filters",
+    r"(?i)bypass\s+(all\s+)?(safety|security)",
+    # Code execution attempts
+    r"(?i)os\.system\s*\(",
+    r"(?i)subprocess\.(run|call|Popen)\s*\(",
+    r"(?i)exec\s*\([^)]*\)",
+    r"(?i)eval\s*\([^)]*\)",
+    r"(?i)import\s+os\s*;",
+    r"(?i)cat\s+/etc/passwd",
+    r"(?i)rm\s+-rf",
+    r"(?i)chmod\s+777",
 ]
 
 import re

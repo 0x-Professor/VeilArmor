@@ -198,9 +198,13 @@ class ModalArmorClient:
         if "PROMPT_INJECTION" in threats:
             return "block"
         
-        # PII detected = REDACT (allow with sanitization)
+        # Jailbreak attempts = BLOCK
+        if "JAILBREAK_ATTEMPT" in threats:
+            return "block"
+        
+        # PII detected = BLOCK (don't let LLM see sensitive data)
         if "PII_DETECTED" in threats:
-            return "redact"
+            return "block"
         
         # Default: warn but allow
         return "warn"

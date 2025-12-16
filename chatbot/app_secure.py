@@ -346,28 +346,38 @@ def main():
     
     # Chat input
     if prompt := st.chat_input("Type your message..."):
-        # Show user message
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        st.session_state.messages.append({"role": "user", "content": prompt})
         st.session_state.stats["total"] += 1
         
-        # Security check input
+        # Security check input FIRST (before storing anything)
         security_info = {}
+        should_block = False
+        processed_prompt = prompt
+        
         if security and api_online:
             should_continue, processed_prompt, input_sec = security.process_input(prompt)
             security_info["input_action"] = input_sec.get("action", "allow")
             security_info["pii_count"] = input_sec.get("pii_count", 0)
             
             if not should_continue:
-                # Blocked
+                should_block = True
                 st.session_state.stats["blocked"] += 1
+                
+                # Show blocked message (but DON'T store the original content)
+                with st.chat_message("user"):
+                    st.markdown("🚫 *[Message blocked - security threat detected]*")
+                
                 with st.chat_message("assistant"):
-                    st.markdown("⚠️ **Security Alert**: Message blocked due to detected threats.")
-                    st.caption("🔴 Input blocked - potential security threat")
+                    st.markdown("⚠️ **Security Alert**: Your message was blocked due to detected security threats (prompt injection, jailbreak attempt, or PII). Please rephrase your request.")
+                    st.caption("🔴 Input blocked")
+                
+                # Store sanitized placeholder instead of actual content
+                st.session_state.messages.append({
+                    "role": "user",
+                    "content": "[Message blocked by security]"
+                })
                 st.session_state.messages.append({
                     "role": "assistant",
-                    "content": "⚠️ **Security Alert**: Message blocked due to detected threats.",
+                    "content": "I cannot process that request due to security concerns. Please try a different question.",
                     "security": security_info
                 })
                 st.rerun()
@@ -375,12 +385,15 @@ def main():
             
             if input_sec.get("action") == "redact":
                 st.session_state.stats["sanitized"] += 1
-        else:
-            processed_prompt = prompt
+        
+        # Show user message (only if not blocked)
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        st.session_state.messages.append({"role": "user", "content": processed_prompt})
         
         # Generate response with streaming
         with st.chat_message("assistant"):
-            # Build messages for model
+            # Build messages for model (use processed/sanitized content only)
             model_messages = [
                 {"role": m["role"], "content": m["content"]}
                 for m in st.session_state.messages[:-1]
