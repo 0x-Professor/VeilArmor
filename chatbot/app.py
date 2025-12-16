@@ -84,7 +84,8 @@ st.markdown("""
 # ========================
 # Constants
 # ========================
-MODEL_NAME = "huihui-ai/Huihui-Qwen3-8B-abliterated-v2"
+# Using smaller 3B model for faster responses (same author, abliterated)
+MODEL_NAME = "huihui-ai/Qwen2.5-3B-Instruct-abliterated"
 MODAL_ARMOR_API_URL = os.getenv("MODAL_ARMOR_API_URL", "http://localhost:8000")
 HF_TOKEN = os.getenv("HF_TOKEN", "")
 
@@ -94,9 +95,9 @@ HF_TOKEN = os.getenv("HF_TOKEN", "")
 # ========================
 @st.cache_resource
 def load_model():
-    """Load and cache the Qwen3 model and tokenizer."""
+    """Load and cache the Qwen model and tokenizer."""
     try:
-        with st.spinner("Loading Qwen3-8B model... This may take a few minutes."):
+        with st.spinner("Loading Qwen2.5-3B model... This should be quick!"):
             tokenizer = AutoTokenizer.from_pretrained(
                 MODEL_NAME,
                 trust_remote_code=True,
@@ -202,7 +203,7 @@ def generate_response(
 def main():
     # Header
     st.markdown('<p class="main-header">🛡️ Modal Armor Secure Chat</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Powered by Qwen3-8B (Abliterated) | Protected by Modal Armor Security</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-header">Powered by Qwen2.5-3B (Abliterated) | Protected by Modal Armor Security</p>', unsafe_allow_html=True)
     
     # Sidebar
     with st.sidebar:
@@ -240,7 +241,7 @@ def main():
         # Model info
         st.subheader("📊 Model Info")
         st.info(f"""
-        **Model:** Qwen3-8B  
+        **Model:** Qwen2.5-3B  
         **Variant:** Abliterated (Uncensored)  
         **Security:** Modal Armor Protected
         """)
