@@ -351,7 +351,7 @@ async def security_check(
     sanitized_prompt = request.prompt
     
     try:
-        # 1. Check for prompt injection
+        # 1. Check for prompt injection using Vigil
         if request.check_injection:
             is_injection, injection_score = check_prompt_injection(request.prompt)
             
@@ -359,8 +359,15 @@ async def security_check(
                 threats.append("PROMPT_INJECTION")
                 risk_score = max(risk_score, injection_score)
                 logger.warning(f"[{request_id}] Prompt injection detected (score: {injection_score:.3f})")
+            
+            # 2. Check for jailbreak patterns (additional layer)
+            is_jailbreak, jailbreak_score, matched = check_jailbreak_patterns(request.prompt)
+            if is_jailbreak and "PROMPT_INJECTION" not in threats:
+                threats.append("JAILBREAK_ATTEMPT")
+                risk_score = max(risk_score, jailbreak_score)
+                logger.warning(f"[{request_id}] Jailbreak pattern detected: {matched[:50]}")
         
-        # 2. Check for PII
+        # 3. Check for PII
         if request.check_pii:
             pii_list, anonymized = check_pii(request.prompt)
             
