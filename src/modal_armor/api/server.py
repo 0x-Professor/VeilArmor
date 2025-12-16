@@ -285,20 +285,35 @@ def check_prompt_injection(prompt: str) -> tuple[bool, float]:
         return False, 0.0
 
 
+# Sensitive PII types that should block requests
+SENSITIVE_PII_TYPES = {
+    "EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD",
+    "US_SSN", "US_PASSPORT", "IP_ADDRESS", "US_BANK_NUMBER",
+    "IBAN_CODE", "US_ITIN", "US_DRIVER_LICENSE", "CRYPTO"
+}
+
+# SSN regex pattern (catches test SSNs that Presidio may miss)
+SSN_PATTERN = re.compile(r'\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b')
+
+
 def check_pii(text: str) -> tuple[List[Dict[str, Any]], str]:
     """
     Check for PII using Presidio.
     Returns: (pii_entities, anonymized_text)
+    Only flags sensitive PII (not general named entities like locations/persons).
     """
     try:
-        # Analyze for PII
+        # First check for SSN with regex (catches test patterns)
+        ssn_matches = SSN_PATTERN.findall(text)
+        
+        # Analyze for PII - only sensitive types
         results = pii_analyzer.analyze(
             text=text,
             language="en",
             entities=[
                 "EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD",
                 "US_SSN", "US_PASSPORT", "IP_ADDRESS",
-                "PERSON", "LOCATION", "URL"
+                "US_BANK_NUMBER", "IBAN_CODE", "US_ITIN"
             ]
         )
         
@@ -312,6 +327,17 @@ def check_pii(text: str) -> tuple[List[Dict[str, Any]], str]:
                 "start": result.start,
                 "end": result.end
             })
+        
+        # Add SSN matches from regex (catches patterns Presidio misses)
+        for ssn in ssn_matches:
+            if not any(p.get("type") == "US_SSN" for p in pii_list):
+                pii_list.append({
+                    "type": "US_SSN",
+                    "text": ssn,
+                    "score": 0.95,
+                    "start": text.find(ssn),
+                    "end": text.find(ssn) + len(ssn)
+                })
         
         # Anonymize if PII found
         anonymized = text
