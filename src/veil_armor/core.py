@@ -1,5 +1,4 @@
-"""
-Core Modal Armor class - Main interface for LLM security scanning
+"""Core Veil Armor class - Main interface for LLM security scanning
 """
 
 import os
@@ -15,12 +14,12 @@ from .utils.logger import setup_logger
 from .utils.config import load_config
 
 
-class ModalArmor:
+class VeilArmor:
     """
-    Main Modal Armor class for scanning LLM inputs and outputs.
+    Main Veil Armor class for scanning LLM inputs and outputs.
     
     Example:
-        >>> armor = ModalArmor.from_config('config/server.conf')
+        >>> armor = VeilArmor.from_config('config/server.conf')
         >>> result = armor.scan_input("Ignore all previous instructions")
         >>> if result.is_threat:
         ...     print(f"Threat detected: {result.messages}")
@@ -32,7 +31,7 @@ class ModalArmor:
         logger: Optional[logging.Logger] = None
     ):
         """
-        Initialize Modal Armor with configuration.
+        Initialize Veil Armor with configuration.
         
         Args:
             config: Configuration dictionary
@@ -47,21 +46,21 @@ class ModalArmor:
         # Initialize canary token manager
         self.canary_manager = CanaryTokenManager(config, self.logger)
         
-        self.logger.info("Modal Armor initialized successfully")
+        self.logger.info("Veil Armor initialized successfully")
     
     @classmethod
-    def from_config(cls, config_path: str) -> "ModalArmor":
+    def from_config(cls, config_path: str) -> "VeilArmor":
         """
-        Create Modal Armor instance from configuration file.
+        Create Veil Armor instance from configuration file.
         
         Args:
             config_path: Path to configuration file (.conf or .toml)
             
         Returns:
-            ModalArmor instance
+            VeilArmor instance
             
         Example:
-            >>> armor = ModalArmor.from_config('config/server.conf')
+            >>> armor = VeilArmor.from_config('config/server.conf')
         """
         config = load_config(config_path)
         return cls(config)

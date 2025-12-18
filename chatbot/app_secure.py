@@ -1,5 +1,4 @@
-"""
-Modal Armor Secure Chat - Professional Edition
+"""Veil Armor Secure Chat - Professional Edition
 Clean, minimal dashboard with streaming responses.
 """
 import streamlit as st
@@ -19,14 +18,14 @@ load_dotenv()
 # Configuration
 # ========================
 MODEL_NAME = "huihui-ai/Qwen2.5-3B-Instruct-abliterated"
-API_URL = os.getenv("MODAL_ARMOR_API_URL", "http://localhost:8000")
+API_URL = os.getenv("VEIL_ARMOR_API_URL", "http://localhost:8000")
 HF_TOKEN = os.getenv("HF_TOKEN", "")
 
 # ========================
 # Page Setup
 # ========================
 st.set_page_config(
-    page_title="Modal Armor Chat",
+    page_title="Veil Armor Chat",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -284,7 +283,7 @@ def main():
     st.markdown("""
     <div class="header-container">
         <div class="header-title">
-            🛡️ Modal Armor Chat
+            🛡️ Veil Armor Chat
             <span class="header-badge">SECURED</span>
         </div>
     </div>

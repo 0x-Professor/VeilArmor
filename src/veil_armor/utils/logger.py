@@ -24,12 +24,12 @@ def setup_logger(config: Dict[str, Any]) -> logging.Logger:
     # Get settings
     log_level = log_config.get('level', 'INFO')
     log_format = log_config.get('format', 'text')
-    log_file = log_config.get('file', 'logs/modal_armor.log')
+    log_file = log_config.get('file', 'logs/veil_armor.log')
     max_size_mb = log_config.get('max_file_size_mb', 100)
     backup_count = log_config.get('backup_count', 5)
     
     # Create logger
-    logger = logging.getLogger('modal_armor')
+    logger = logging.getLogger('veil_armor')
     logger.setLevel(getattr(logging, log_level.upper()))
     
     # Clear existing handlers

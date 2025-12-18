@@ -1,5 +1,5 @@
 """
-Trivy Security Scanner Integration for Modal Armor
+Trivy Security Scanner Integration for Veil Armor
 Automated vulnerability scanning for dependencies and containers.
 """
 import subprocess
@@ -312,7 +312,7 @@ After installation, verify with: trivy --version
 def main():
     """Demo of Trivy scanner."""
     print("=" * 80)
-    print("TRIVY SECURITY SCANNER - Modal Armor Integration")
+    print("TRIVY SECURITY SCANNER - Veil Armor Integration")
     print("=" * 80)
     print()
     

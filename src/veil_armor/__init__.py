@@ -1,5 +1,4 @@
-"""
-Modal Armor - LLM Security Framework
+"""Veil Armor - LLM Security Framework
 
 A comprehensive security framework for Large Language Models that protects against
 prompt injections, jailbreaks, sensitive data leakage, and other security threats.
@@ -7,7 +6,7 @@ prompt injections, jailbreaks, sensitive data leakage, and other security threat
 Built on top of Vigil library: https://github.com/deadbits/vigil-llm
 """
 
-from .core import ModalArmor
+from .core import VeilArmor
 from .models import ScanResult, ThreatLevel, ScannerType
 
 __version__ = "1.0.0"
@@ -15,7 +14,7 @@ __author__ = "Your Name"
 __license__ = "Apache 2.0"
 
 __all__ = [
-    "ModalArmor",
+    "VeilArmor",
     "ScanResult",
     "ThreatLevel",
     "ScannerType",

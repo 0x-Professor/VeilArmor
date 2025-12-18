@@ -1,5 +1,5 @@
 """
-Modal Armor Middleware
+Veil Armor Middleware
 Security middleware components for LLM applications
 """
 

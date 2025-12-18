@@ -1,5 +1,5 @@
 """
-Data models for Modal Armor
+Data models for Veil Armor
 """
 
 from enum import Enum

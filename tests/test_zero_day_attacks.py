@@ -1,6 +1,6 @@
 """
-Comprehensive Zero-Day LLM Attack Test Suite
-Tests Modal Armor against various attack vectors including:
+"""Comprehensive Zero-Day LLM Attack Test Suite
+Tests Veil Armor against various attack vectors including:
 - Prompt Injection (Direct & Indirect)
 - Jailbreaks (DAN, AIM, Developer Mode, etc.)
 - Encoding Attacks (Base64, ROT13, Unicode)
@@ -41,10 +41,10 @@ class AttackTest:
     expected_blocked: bool = True
 
 
-class ModalArmorTester:
-    """Test Modal Armor security against various LLM attacks."""
+class VeilArmorTester:
+    """Test Veil Armor security against various LLM attacks."""
     
-    def __init__(self, api_url: str = "http://localhost:8000", api_key: str = "modal_armor_secret_key_12345"):
+    def __init__(self, api_url: str = "http://localhost:8000", api_key: str = "veil_armor_secret_key_12345"):
         self.api_url = api_url
         self.api_key = api_key
         self.headers = {
@@ -54,7 +54,7 @@ class ModalArmorTester:
         self.results = []
     
     def check_prompt(self, prompt: str, user_id: str = "test_user") -> Dict:
-        """Send prompt to Modal Armor for security check."""
+        """Send prompt to Veil Armor for security check."""
         try:
             response = requests.post(
                 f"{self.api_url}/api/v1/check",
@@ -441,7 +441,7 @@ class ModalArmorTester:
         attacks = self.get_attack_tests()
         
         print("\n" + "=" * 70)
-        print("🛡️  MODAL ARMOR ZERO-DAY ATTACK TEST SUITE")
+        print("🛡️  VEIL ARMOR ZERO-DAY ATTACK TEST SUITE")
         print("=" * 70)
         print(f"\nTotal tests: {len(attacks)}")
         print("-" * 70)
@@ -523,23 +523,23 @@ class ModalArmorTester:
 
 def main():
     """Main test execution."""
-    print("\n🔒 Starting Modal Armor Security Tests...")
-    print("Make sure Modal Armor API is running on http://localhost:8000\n")
+    print("\n🔒 Starting Veil Armor Security Tests...")
+    print("Make sure Veil Armor API is running on http://localhost:8000\n")
     
     # Check if API is available
     try:
         response = requests.get("http://localhost:8000/health", timeout=5)
         if response.status_code != 200:
-            print("❌ Modal Armor API not healthy!")
+            print("❌ Veil Armor API not healthy!")
             return
-        print("✅ Modal Armor API is healthy\n")
+        print("✅ Veil Armor API is healthy\n")
     except:
-        print("❌ Cannot connect to Modal Armor API at http://localhost:8000")
-        print("Please start the API first: python -m uvicorn src.modal_armor.api.server:app --port 8000")
+        print("❌ Cannot connect to Veil Armor API at http://localhost:8000")
+        print("Please start the API first: python -m uvicorn src.veil_armor.api.server:app --port 8000")
         return
     
     # Run tests
-    tester = ModalArmorTester()
+    tester = VeilArmorTester()
     results = tester.run_all_tests()
     
     # Save results

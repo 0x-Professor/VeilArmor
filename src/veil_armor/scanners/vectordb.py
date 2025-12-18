@@ -87,7 +87,7 @@ class VectorDBScanner(BaseScanner):
         
         self.client = chromadb.PersistentClient(path=db_path)
         
-        collection_name = self.vectordb_config.get('collection_name', 'modal_armor_threats')
+        collection_name = self.vectordb_config.get('collection_name', 'veil_armor_threats')
         
         # Get or create collection
         try:
@@ -96,7 +96,7 @@ class VectorDBScanner(BaseScanner):
         except:
             self.collection = self.client.create_collection(
                 name=collection_name,
-                metadata={"description": "Modal Armor threat patterns"}
+                metadata={"description": "Veil Armor threat patterns"}
             )
             self.logger.info(f"Created new collection: {collection_name}")
     

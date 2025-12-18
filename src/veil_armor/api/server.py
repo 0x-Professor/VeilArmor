@@ -1,5 +1,4 @@
-"""
-Production-ready FastAPI server for Modal Armor.
+"""Production-ready FastAPI server for Veil Armor.
 Real implementation with all security features integrated.
 """
 from fastapi import FastAPI, HTTPException, Depends, Header, Request
@@ -14,7 +13,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 
-# Import Modal Armor security components
+# Import Veil Armor security components
 from vigil import TransformerScanner
 from vigil.schema import ScanModel
 from presidio_analyzer import AnalyzerEngine
@@ -29,11 +28,11 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s | %(levelname)s | %(name)s | %(message)s'
 )
-logger = logging.getLogger("modal_armor_api")
+logger = logging.getLogger("veil_armor_api")
 
 # Initialize FastAPI
 app = FastAPI(
-    title="Modal Armor API",
+    title="Veil Armor API",
     description="Enterprise LLM Security Platform - Production API",
     version="1.0.0",
     docs_url="/api/docs",
@@ -102,7 +101,7 @@ async def startup_event():
     """Initialize security components on startup."""
     global vigil_scanner, pii_analyzer, pii_anonymizer, gemini_model
     
-    logger.info("Initializing Modal Armor security components...")
+    logger.info("Initializing Veil Armor security components...")
     
     try:
         # Initialize Vigil scanner
@@ -130,7 +129,7 @@ async def startup_event():
             logger.warning("GEMINI_API_KEY not found - LLM generation disabled")
         
         logger.info("=" * 80)
-        logger.info("Modal Armor API Server Ready")
+        logger.info("Veil Armor API Server Ready")
         logger.info("=" * 80)
         
     except Exception as e:
@@ -142,7 +141,7 @@ async def startup_event():
 async def root():
     """Root endpoint."""
     return {
-        "service": "Modal Armor API",
+        "service": "Veil Armor API",
         "version": "1.0.0",
         "status": "operational",
         "uptime_seconds": int(time.time() - start_time)
@@ -180,21 +179,21 @@ async def metrics():
     """Prometheus-compatible metrics endpoint."""
     uptime = int(time.time() - start_time)
     
-    metrics_text = f"""# HELP modal_armor_requests_total Total number of requests
-# TYPE modal_armor_requests_total counter
-modal_armor_requests_total {request_counter['total']}
+    metrics_text = f"""# HELP veil_armor_requests_total Total number of requests
+# TYPE veil_armor_requests_total counter
+veil_armor_requests_total {request_counter['total']}
 
-# HELP modal_armor_requests_blocked Number of blocked requests
-# TYPE modal_armor_requests_blocked counter
-modal_armor_requests_blocked {request_counter['blocked']}
+# HELP veil_armor_requests_blocked Number of blocked requests
+# TYPE veil_armor_requests_blocked counter
+veil_armor_requests_blocked {request_counter['blocked']}
 
-# HELP modal_armor_requests_allowed Number of allowed requests
-# TYPE modal_armor_requests_allowed counter
-modal_armor_requests_allowed {request_counter['allowed']}
+# HELP veil_armor_requests_allowed Number of allowed requests
+# TYPE veil_armor_requests_allowed counter
+veil_armor_requests_allowed {request_counter['allowed']}
 
-# HELP modal_armor_uptime_seconds Service uptime in seconds
-# TYPE modal_armor_uptime_seconds gauge
-modal_armor_uptime_seconds {uptime}
+# HELP veil_armor_uptime_seconds Service uptime in seconds
+# TYPE veil_armor_uptime_seconds gauge
+veil_armor_uptime_seconds {uptime}
 """
     
     return metrics_text
@@ -202,7 +201,7 @@ modal_armor_uptime_seconds {uptime}
 
 async def verify_api_key(x_api_key: str = Header(...)):
     """Verify API key from request header."""
-    expected_key = os.getenv("MODAL_ARMOR_API_KEY", "modal_armor_secret_key_12345")
+    expected_key = os.getenv("VEIL_ARMOR_API_KEY", "veil_armor_secret_key_12345")
     
     if x_api_key != expected_key:
         logger.warning(f"Invalid API key attempt: {x_api_key[:10]}...")

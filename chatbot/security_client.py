@@ -1,6 +1,5 @@
-"""
-Modal Armor Security Client
-Connects the chatbot to Modal Armor API for input/output security checks.
+"""Veil Armor Security Client
+Connects the chatbot to Veil Armor API for input/output security checks.
 """
 import requests
 import logging
@@ -25,9 +24,9 @@ class SecurityResult:
     action: str  # "allow", "block", "redact", "warn"
 
 
-class ModalArmorClient:
+class VeilArmorClient:
     """
-    Client for Modal Armor Security API.
+    Client for Veil Armor Security API.
     Handles both input sanitization and output filtering.
     """
     
@@ -37,14 +36,14 @@ class ModalArmorClient:
         api_key: Optional[str] = None
     ):
         """
-        Initialize Modal Armor client.
+        Initialize Veil Armor client.
         
         Args:
-            api_url: Base URL for Modal Armor API
+            api_url: Base URL for Veil Armor API
             api_key: API key for authentication
         """
         self.api_url = api_url.rstrip("/")
-        self.api_key = api_key or os.getenv("MODAL_ARMOR_API_KEY", "modal_armor_secret_key_12345")
+        self.api_key = api_key or os.getenv("VEIL_ARMOR_API_KEY", "veil_armor_secret_key_12345")
         self.session = requests.Session()
         self.session.headers.update({
             "X-API-Key": self.api_key,
@@ -52,7 +51,7 @@ class ModalArmorClient:
         })
     
     def check_health(self) -> bool:
-        """Check if Modal Armor API is healthy."""
+        """Check if Veil Armor API is healthy."""
         try:
             response = self.session.get(f"{self.api_url}/health", timeout=5)
             return response.status_code == 200
@@ -72,7 +71,7 @@ class ModalArmorClient:
         Check user input for security threats before sending to LLM.
         
         Args:
-            prompt: User's input prompt
+            prompt: User input prompt
             user_id: User identifier for tracking
             check_pii: Enable PII detection
             check_injection: Enable prompt injection detection
@@ -116,7 +115,7 @@ class ModalArmorClient:
                 return self._fail_safe_result(prompt)
                 
         except requests.exceptions.ConnectionError:
-            logger.warning("Modal Armor API not available - using fail-safe mode")
+            logger.warning("Veil Armor API not available - using fail-safe mode")
             return self._fail_safe_result(prompt)
         except Exception as e:
             logger.error(f"Security check error: {e}")
@@ -233,7 +232,7 @@ class SecurityPipeline:
     """
     
     def __init__(self, api_url: str = "http://localhost:8000", api_key: Optional[str] = None):
-        self.client = ModalArmorClient(api_url=api_url, api_key=api_key)
+        self.client = VeilArmorClient(api_url=api_url, api_key=api_key)
         self.stats = {
             "inputs_checked": 0,
             "inputs_blocked": 0,
@@ -243,7 +242,7 @@ class SecurityPipeline:
         }
     
     def is_api_available(self) -> bool:
-        """Check if Modal Armor API is available."""
+        """Check if Veil Armor API is available."""
         return self.client.check_health()
     
     def process_input(
@@ -255,7 +254,7 @@ class SecurityPipeline:
         Process user input through security pipeline.
         
         Args:
-            prompt: User's input prompt
+            prompt: User input prompt
             user_id: User identifier
             
         Returns:
@@ -331,7 +330,7 @@ class SecurityPipeline:
 
 # Quick test
 if __name__ == "__main__":
-    client = ModalArmorClient()
+    client = VeilArmorClient()
     
     # Check health
     print(f"API Health: {client.check_health()}")

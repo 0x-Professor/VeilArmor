@@ -1,0 +1,31 @@
+# Veil Armor Docker Compose Configuration
+# Security API for LLM protection
+
+services:
+  # Veil Armor Security API
+  veil-armor-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: veil-armor-api
+    ports:
+      - "8000:8000"
+    environment:
+      - VEIL_ARMOR_API_KEY=${VEIL_ARMOR_API_KEY:-veil_armor_secret_key_12345}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - LOG_LEVEL=INFO
+      - VEIL_ARMOR_ENV=production
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

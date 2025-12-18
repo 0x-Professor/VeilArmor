@@ -1,14 +1,14 @@
-# Modal Armor Secure Chatbot Requirements
+# Veil Armor Secure Chatbot Requirements
 
 # Streamlit UI
 streamlit>=1.28.0
 
-# Transformers for Qwen3 model
+# Transformers for Qwen model
 transformers>=4.40.0
 torch>=2.0.0
 accelerate>=0.25.0
 
-# HTTP client for Modal Armor API
+# HTTP client for Veil Armor API
 requests>=2.31.0
 
 # Environment management

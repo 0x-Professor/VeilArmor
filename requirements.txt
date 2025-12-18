@@ -1,4 +1,4 @@
-# Modal Armor - Requirements
+# Veil Armor - Requirements
 # Complete implementation of all 10 OWASP LLM Vulnerabilities
 
 # ===== Core Framework =====
