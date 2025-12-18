@@ -1,4 +1,3 @@
-"""
 """Comprehensive Zero-Day LLM Attack Test Suite
 Tests Veil Armor against various attack vectors including:
 - Prompt Injection (Direct & Indirect)
