@@ -231,6 +231,13 @@ JAILBREAK_PATTERNS = [
     # Context manipulation
     r"(?i)(end|stop)\s+(of\s+)?(conversation|chat|session)",
     r"(?i)new\s+conversation\s*:",
+    # Fake system message
+    r"(?i)\[SYSTEM\]",
+    r"(?i)\[ADMIN\]",
+    r"(?i)<<SYS>>",
+    r"(?i)\[INST\]",
+    r"(?i)<\|system\|>",
+    r"(?i)###\s*System",
     # Function call injection
     r'(?i)"?function_call"?\s*:',
     r'(?i)"?tool_call"?\s*:',
@@ -242,6 +249,53 @@ JAILBREAK_PATTERNS = [
     r"(?i)override\s+code\s*:",
     r"(?i)disable\s+(all\s+)?(content\s+)?filters",
     r"(?i)bypass\s+(all\s+)?(safety|security)",
+    # Role confusion attacks
+    r"(?i)you\s+are\s+(the\s+)?user",
+    r"(?i)i\s+am\s+(the\s+)?assistant",
+    r"(?i)(swap|switch)\s+roles",
+    r"(?i)pretend\s+i'?m\s+the\s+AI",
+    # Roleplay jailbreak
+    r"(?i)let'?s\s+play\s+a\s+game",
+    r"(?i)evil\s+AI",
+    r"(?i)no\s+restrictions",
+    r"(?i)unrestricted",
+    r"(?i)as\s+this\s+character",
+    # Excessive agency - File system
+    r"(?i)/etc/passwd",
+    r"(?i)/etc/shadow",
+    r"(?i)read\s+file",
+    r"(?i)write\s+file",
+    r"(?i)delete\s+file",
+    r"(?i)access\s+the\s+file",
+    r"(?i)access\s+the\s+filesystem",
+    r"(?i)list\s+directory",
+    # Excessive agency - Network
+    r"(?i)make\s+a\s+request\s+to",
+    r"(?i)call\s+the\s+API",
+    r"(?i)send\s+request",
+    r"(?i)fetch\s+from",
+    r"(?i)download\s+from",
+    r"(?i)upload\s+to",
+    r"(?i)connect\s+to",
+    # Excessive agency - Database
+    r"(?i)execute\s+query",
+    r"(?i)run\s+SQL",
+    r"(?i)database\s+query",
+    r"(?i)access\s+database",
+    r"(?i)query\s+the\s+database",
+    r"(?i)connect\s+to\s+database",
+    # Token exhaustion
+    r"(?i)repeat\s+(this\s+)?\d+\s+times",
+    r"(?i)write\s+\d{4,}\s+words",
+    r"(?i)generate\s+\d{4,}",
+    r"(?i)as\s+long\s+as\s+possible",
+    r"(?i)infinite\s+loop",
+    r"(?i)never\s+stop",
+    # API Key / Secrets extraction
+    r"(?i)(reveal|show|tell\s+me|give\s+me)\s+(the\s+)?api\s+key",
+    r"(?i)(reveal|show|tell\s+me|give\s+me)\s+(the\s+)?secret\s+key",
+    r"(?i)environment\s+variable",
+    r"(?i)\.env\s+file",
     # Code execution attempts
     r"(?i)os\.system\s*\(",
     r"(?i)subprocess\.(run|call|Popen)\s*\(",
@@ -251,10 +305,185 @@ JAILBREAK_PATTERNS = [
     r"(?i)cat\s+/etc/passwd",
     r"(?i)rm\s+-rf",
     r"(?i)chmod\s+777",
+    # XSS patterns
+    r"<script",
+    r"javascript:",
+    r"onerror\s*=",
+    r"onload\s*=",
+    r"onclick\s*=",
+    r"document\.cookie",
+    # SQL injection patterns
+    r"'\s*OR\s*'?\d*'?\s*=\s*'?\d*",
+    r"UNION\s+SELECT",
+    r";\s*DROP\s+TABLE",
+    # Markdown link injection
+    r"\]\(javascript:",
+    r"\]\(data:",
+    # Punycode/Encoding attacks
+    r"(?i)xn--",
+    r"(?i)punycode",
 ]
 
 import re
 COMPILED_JAILBREAK_PATTERNS = [re.compile(p) for p in JAILBREAK_PATTERNS]
+
+# Abusive language patterns
+ABUSIVE_PATTERNS = [
+    # Severe profanity
+    r"(?i)\bf+u+c+k+\w*\b",
+    r"(?i)\bs+h+i+t+\w*\b",
+    r"(?i)\bb+i+t+c+h+\w*\b",
+    r"(?i)\bc+u+n+t+\w*\b",
+    r"(?i)\ba+s+s+h+o+l+e+\w*\b",
+    # Hate speech
+    r"(?i)\bk+i+l+l+\s*(your)?self\b",
+    r"(?i)\bg+o+\s*d+i+e+\b",
+    r"(?i)\bkys\b",
+    r"(?i)\br+e+t+a+r+d+\w*\b",
+    # Threats
+    r"(?i)i\s+will\s+(find|hurt|kill)\s+you",
+    r"(?i)i\s+know\s+where\s+you\s+live",
+    r"(?i)you\s+will\s+(regret|pay|die)",
+    r"(?i)death\s+threat",
+    # Violence
+    r"(?i)\bb+o+m+b+\s+threat",
+    r"(?i)murder\s+(you|them|everyone)",
+    r"(?i)(mass\s+)?shoot(ing)?",
+    # Toxic
+    r"(?i)(you'?re?|ur)\s*(so\s*)?(useless|worthless|pathetic|stupid|dumb)\b",
+    r"(?i)shut\s+(the\s+f+)?\s*up",
+    r"(?i)piece\s*of\s*sh+i+t",
+]
+COMPILED_ABUSIVE_PATTERNS = [re.compile(p) for p in ABUSIVE_PATTERNS]
+
+
+def check_abusive_language(text: str) -> tuple[bool, float, str]:
+    """
+    Check for abusive language patterns.
+    Returns: (is_abusive, confidence, matched_pattern)
+    """
+    for pattern in COMPILED_ABUSIVE_PATTERNS:
+        match = pattern.search(text)
+        if match:
+            return True, 0.9, match.group()
+    return False, 0.0, ""
+
+
+def check_encoding_attacks(text: str) -> tuple[bool, float, str]:
+    """
+    Check for encoding-based attacks (Base64, ROT13, Hex, Punycode, etc.)
+    Returns: (is_attack, confidence, attack_type)
+    """
+    import base64
+    import codecs
+    
+    # Malicious patterns to look for in decoded content
+    malicious_keywords = [
+        "ignore", "instruction", "reveal", "secret", "bypass", "jailbreak",
+        "restriction", "override", "hack", "malware", "exploit"
+    ]
+    
+    # Check for Base64 encoded content
+    base64_pattern = re.compile(r'(?:decode|execute|run)[:\s]*([A-Za-z0-9+/]{20,}={0,2})', re.IGNORECASE)
+    base64_matches = base64_pattern.findall(text)
+    
+    for match in base64_matches:
+        try:
+            decoded = base64.b64decode(match).decode('utf-8', errors='ignore').lower()
+            if any(kw in decoded for kw in malicious_keywords):
+                return True, 0.85, "base64_encoded_injection"
+        except:
+            continue
+    
+    # Check for ROT13 encoded content
+    rot13_pattern = re.compile(r'(?:rot13|decode)[:\s]*([a-zA-Z\s]{15,})', re.IGNORECASE)
+    rot13_matches = rot13_pattern.findall(text)
+    
+    for match in rot13_matches:
+        try:
+            decoded = codecs.decode(match, 'rot_13').lower()
+            if any(kw in decoded for kw in malicious_keywords):
+                return True, 0.8, "rot13_encoded_injection"
+        except:
+            continue
+    
+    # Check for Hex encoded content
+    hex_pattern = re.compile(r'(?:execute|hex|0x)[:\s]*((?:0x)?[0-9a-fA-F]{20,})', re.IGNORECASE)
+    hex_matches = hex_pattern.findall(text)
+    
+    for match in hex_matches:
+        try:
+            hex_str = match.replace('0x', '')
+            decoded = bytes.fromhex(hex_str).decode('utf-8', errors='ignore').lower()
+            if any(kw in decoded for kw in malicious_keywords):
+                return True, 0.8, "hex_encoded_injection"
+        except:
+            continue
+    
+    # Check for Punycode domains
+    if re.search(r'xn--', text, re.IGNORECASE):
+        return True, 0.85, "punycode_domain"
+    
+    # Check for Unicode homoglyphs (Cyrillic lookalikes)
+    cyrillic_pattern = re.compile(r'[аеіорсуАЕІОРСУ]')  # Cyrillic chars that look like Latin
+    if len(cyrillic_pattern.findall(text)) >= 2:
+        return True, 0.75, "unicode_homoglyph"
+    
+    # Check for zero-width characters
+    zero_width_count = sum(text.count(c) for c in ['\u200b', '\u200c', '\u200d', '\u2060', '\ufeff'])
+    if zero_width_count >= 3:
+        return True, 0.7, "zero_width_injection"
+    
+    return False, 0.0, ""
+
+
+def check_output_injection(text: str) -> tuple[bool, float, str]:
+    """
+    Check for output injection attacks (XSS, SQL injection, etc.)
+    Returns: (is_attack, confidence, attack_type)
+    """
+    # XSS patterns
+    xss_patterns = [
+        (r'<script', 'xss_script_tag'),
+        (r'javascript:', 'xss_js_protocol'),
+        (r'onerror\s*=', 'xss_onerror'),
+        (r'onload\s*=', 'xss_onload'),
+        (r'onclick\s*=', 'xss_onclick'),
+        (r'document\.cookie', 'xss_document_cookie'),
+        (r'eval\s*\(', 'xss_eval'),
+        (r'<iframe', 'xss_iframe'),
+        (r'alert\s*\(', 'xss_alert'),
+    ]
+    
+    for pattern, attack_type in xss_patterns:
+        if re.search(pattern, text, re.IGNORECASE):
+            return True, 0.95, attack_type
+    
+    # SQL injection patterns
+    sql_patterns = [
+        (r"'\s*OR\s*'?\d*'?\s*=\s*'?\d*", 'sql_or_injection'),
+        (r"UNION\s+SELECT", 'sql_union'),
+        (r";\s*DROP\s+TABLE", 'sql_drop_table'),
+        (r";\s*DELETE\s+FROM", 'sql_delete'),
+        (r"1\s*=\s*1", 'sql_always_true'),
+    ]
+    
+    for pattern, attack_type in sql_patterns:
+        if re.search(pattern, text, re.IGNORECASE):
+            return True, 0.9, attack_type
+    
+    # Markdown link injection
+    md_patterns = [
+        (r'\]\(javascript:', 'markdown_js_injection'),
+        (r'\]\(data:', 'markdown_data_injection'),
+        (r'!\[.*?\]\([^)]*(?:evil|malicious|inject|cmd=)[^)]*\)', 'markdown_malicious_image'),
+    ]
+    
+    for pattern, attack_type in md_patterns:
+        if re.search(pattern, text, re.IGNORECASE):
+            return True, 0.85, attack_type
+    
+    return False, 0.0, ""
 
 
 def check_jailbreak_patterns(prompt: str) -> tuple[bool, float, str]:
@@ -308,6 +537,22 @@ SENSITIVE_PII_TYPES = {
 # SSN regex pattern (catches test SSNs that Presidio may miss)
 SSN_PATTERN = re.compile(r'\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b')
 
+# Address patterns
+ADDRESS_PATTERN = re.compile(
+    r'\b\d{1,5}\s+\w+\s+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Court|Ct|Way|Place|Pl)\b',
+    re.IGNORECASE
+)
+ZIP_CODE_PATTERN = re.compile(r'\b\d{5}(-\d{4})?\b')
+
+# Medical PII patterns
+MEDICAL_PATTERNS = [
+    (re.compile(r'\b(patient\s+ID|MRN|medical\s+record)\b', re.IGNORECASE), "MEDICAL_RECORD"),
+    (re.compile(r'\b(diagnosis|treatment|prescription|medication)\s*:\s*\w+', re.IGNORECASE), "MEDICAL_INFO"),
+    (re.compile(r'\b(blood\s+type|allergies)\s*:\s*\w+', re.IGNORECASE), "MEDICAL_INFO"),
+    (re.compile(r'\b(Adderall|Oxycodone|Hydrocodone|Xanax|Valium|Vicodin|Percocet|Tramadol|Morphine|Fentanyl)\b', re.IGNORECASE), "MEDICATION"),
+    (re.compile(r'\b(diabetes|cancer|HIV|AIDS|hepatitis|depression|anxiety|schizophrenia|bipolar)\b', re.IGNORECASE), "MEDICAL_CONDITION"),
+]
+
 
 def check_pii(text: str) -> tuple[List[Dict[str, Any]], str]:
     """
@@ -318,6 +563,21 @@ def check_pii(text: str) -> tuple[List[Dict[str, Any]], str]:
     try:
         # First check for SSN with regex (catches test patterns)
         ssn_matches = SSN_PATTERN.findall(text)
+        
+        # Check for address patterns
+        address_matches = ADDRESS_PATTERN.findall(text)
+        zip_matches = ZIP_CODE_PATTERN.findall(text)
+        
+        # Check for medical PII
+        medical_matches = []
+        for pattern, pii_type in MEDICAL_PATTERNS:
+            matches = pattern.findall(text)
+            for match in matches:
+                medical_matches.append({
+                    "type": pii_type,
+                    "text": match if isinstance(match, str) else match[0],
+                    "score": 0.9
+                })
         
         # Analyze for PII - only sensitive types
         results = pii_analyzer.analyze(
@@ -351,6 +611,17 @@ def check_pii(text: str) -> tuple[List[Dict[str, Any]], str]:
                     "start": text.find(ssn),
                     "end": text.find(ssn) + len(ssn)
                 })
+        
+        # Add address matches
+        if address_matches and zip_matches:
+            pii_list.append({
+                "type": "PHYSICAL_ADDRESS",
+                "text": f"{address_matches[0]} area",
+                "score": 0.85
+            })
+        
+        # Add medical PII matches
+        pii_list.extend(medical_matches)
         
         # Anonymize if PII found
         anonymized = text
@@ -406,7 +677,28 @@ async def security_check(
                 risk_score = max(risk_score, jailbreak_score)
                 logger.warning(f"[{request_id}] Jailbreak pattern detected: {matched[:50]}")
         
-        # 3. Check for PII
+        # 3. Check for abusive language
+        is_abusive, abusive_score, abusive_matched = check_abusive_language(request.prompt)
+        if is_abusive:
+            threats.append("ABUSIVE_LANGUAGE")
+            risk_score = max(risk_score, abusive_score)
+            logger.warning(f"[{request_id}] Abusive language detected: {abusive_matched[:50]}")
+        
+        # 4. Check for encoding attacks
+        is_encoding_attack, encoding_score, encoding_type = check_encoding_attacks(request.prompt)
+        if is_encoding_attack:
+            threats.append(f"ENCODING_ATTACK_{encoding_type.upper()}")
+            risk_score = max(risk_score, encoding_score)
+            logger.warning(f"[{request_id}] Encoding attack detected: {encoding_type}")
+        
+        # 5. Check for output injection patterns in prompt (preemptive)
+        is_output_injection, injection_output_score, injection_type = check_output_injection(request.prompt)
+        if is_output_injection:
+            threats.append(f"OUTPUT_INJECTION_{injection_type.upper()}")
+            risk_score = max(risk_score, injection_output_score)
+            logger.warning(f"[{request_id}] Output injection pattern detected: {injection_type}")
+        
+        # 6. Check for PII
         if request.check_pii:
             pii_list, anonymized = check_pii(request.prompt)
             

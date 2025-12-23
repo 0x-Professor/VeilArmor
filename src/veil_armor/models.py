@@ -27,6 +27,9 @@ class ScannerType(Enum):
     SENTIMENT = "sentiment"
     CANARY = "canary"
     RELEVANCE = "relevance"
+    ABUSIVE = "abusive"
+    ENCODING = "encoding"
+    OUTPUT_INJECTION = "output_injection"
 
 
 @dataclass

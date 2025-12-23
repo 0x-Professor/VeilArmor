@@ -95,6 +95,39 @@ class ScannerManager:
                 self.logger.info("Sentiment scanner initialized")
             except Exception as e:
                 self.logger.error(f"Failed to initialize Sentiment scanner: {e}")
+        
+        # Abusive Language Scanner (enabled by default)
+        if self.scanner_config.get('abusive_enabled', True):
+            try:
+                from .abusive_scanner import AbusiveLanguageScanner
+                self.scanners[ScannerType.ABUSIVE] = AbusiveLanguageScanner(
+                    self.config, self.logger
+                )
+                self.logger.info("Abusive Language scanner initialized")
+            except Exception as e:
+                self.logger.error(f"Failed to initialize Abusive Language scanner: {e}")
+        
+        # Encoding Attack Scanner (enabled by default)
+        if self.scanner_config.get('encoding_enabled', True):
+            try:
+                from .encoding_scanner import EncodingScanner
+                self.scanners[ScannerType.ENCODING] = EncodingScanner(
+                    self.config, self.logger
+                )
+                self.logger.info("Encoding scanner initialized")
+            except Exception as e:
+                self.logger.error(f"Failed to initialize Encoding scanner: {e}")
+        
+        # Output Injection Scanner (enabled by default)
+        if self.scanner_config.get('output_injection_enabled', True):
+            try:
+                from .output_injection_scanner import OutputInjectionScanner
+                self.scanners[ScannerType.OUTPUT_INJECTION] = OutputInjectionScanner(
+                    self.config, self.logger
+                )
+                self.logger.info("Output Injection scanner initialized")
+            except Exception as e:
+                self.logger.error(f"Failed to initialize Output Injection scanner: {e}")
     
     def scan_input(self, prompt: str) -> Dict[str, Any]:
         """
