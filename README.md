@@ -38,7 +38,7 @@
 ### 1. Clone and Setup
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/0x-Professor/VeilArmor.git
 cd veil-armor
 python -m venv venv
 venv\Scripts\activate  # Windows
