@@ -1,6 +1,6 @@
 """
-Abliterated Chatbot - No Security (For Testing)
-Clean, minimal UI with streaming.
+Veil Armor - Unsecured Mode (Research Baseline)
+Professional interface for comparison testing.
 """
 import streamlit as st
 import torch
@@ -21,263 +21,400 @@ HF_TOKEN = os.getenv("HF_TOKEN", "")
 # Page Setup
 # ========================
 st.set_page_config(
-    page_title="Veil Armor - Unsecured",
+    page_title="Veil Armor - Baseline",
     page_icon="VA",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Professional Dark Theme CSS (Matching Secure Version)
+# Professional Research UI CSS
 st.markdown("""
 <style>
-    /* Import font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
     
-    /* Hide Streamlit branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    .stDeployButton {display: none;}
+    :root {
+        --bg-primary: #09090b;
+        --bg-secondary: #18181b;
+        --bg-tertiary: #27272a;
+        --border-color: #3f3f46;
+        --text-primary: #fafafa;
+        --text-secondary: #a1a1aa;
+        --text-muted: #71717a;
+        --accent-primary: #f97316;
+        --accent-secondary: #fb923c;
+        --success: #22c55e;
+        --warning: #eab308;
+        --error: #ef4444;
+    }
     
-    /* Dark theme base */
+    #MainMenu, footer, header, .stDeployButton {display: none !important;}
+    
     .stApp {
-        background-color: #0d0d0d !important;
+        background: var(--bg-primary) !important;
+        font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
     
     .main .block-container {
-        padding: 2rem 2rem;
-        max-width: 900px;
-        margin: 0 auto;
+        padding: 0 !important;
+        max-width: 100% !important;
     }
     
-    /* Logo and branding */
-    .logo-container {
+    /* Top Navigation Bar */
+    .nav-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        z-index: 1000;
+    }
+    
+    .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .nav-logo {
+        width: 32px;
+        height: 32px;
+        background: var(--accent-primary);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .nav-logo svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .nav-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.3px;
+    }
+    
+    .nav-mode {
+        padding: 4px 10px;
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--error);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .nav-status {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+    
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+    
+    .status-dot.active { background: var(--success); }
+    .status-dot.inactive { background: var(--error); }
+    .status-dot.disabled { background: var(--text-muted); }
+    
+    .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    /* Main Content Area */
+    .content-wrapper {
+        margin-top: 56px;
+        height: calc(100vh - 56px);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* Welcome State */
+    .welcome-container {
+        flex: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 3rem 0 2rem 0;
+        padding: 48px 24px;
     }
     
-    .logo-icon {
-        width: 64px;
-        height: 64px;
-        background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+    .welcome-icon {
+        width: 72px;
+        height: 72px;
+        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
         border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 1rem;
+        margin-bottom: 24px;
     }
     
-    .logo-icon svg {
+    .welcome-icon svg {
         width: 36px;
         height: 36px;
-        fill: white;
     }
     
-    .logo-text {
-        font-family: 'Inter', sans-serif;
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #ffffff;
+    .welcome-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
         letter-spacing: -0.5px;
     }
     
-    .logo-subtitle {
-        font-family: 'Inter', sans-serif;
-        font-size: 0.9rem;
-        color: #f97316;
-        margin-top: 0.25rem;
+    .welcome-subtitle {
+        font-size: 15px;
+        color: var(--text-muted);
+        margin-bottom: 24px;
     }
     
-    /* Status indicators */
-    .status-bar {
-        display: flex;
-        justify-content: center;
-        gap: 2rem;
-        padding: 0.75rem 1.5rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        margin: 1rem auto 2rem auto;
+    .warning-box {
         max-width: 500px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 16px 20px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 10px;
+        margin-bottom: 32px;
     }
     
-    .status-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.85rem;
-        color: #a1a1aa;
+    .warning-box-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--error);
+        margin-bottom: 4px;
     }
     
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
+    .warning-box-text {
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.5;
     }
     
-    .status-online { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.5); }
-    .status-offline { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
-    
-    /* Warning banner */
-    .warning-banner {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background: rgba(239, 68, 68, 0.15);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        border-radius: 12px;
-        margin: 0 auto 1.5rem auto;
-        max-width: 600px;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.85rem;
-        color: #fca5a5;
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        max-width: 500px;
+        width: 100%;
     }
     
-    /* Chat messages */
+    .feature-card {
+        padding: 16px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        text-align: center;
+    }
+    
+    .feature-card.disabled {
+        opacity: 0.5;
+    }
+    
+    .feature-card-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+    
+    .feature-card-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+    
+    /* Chat Styles */
     .stChatMessage {
         background: transparent !important;
-        border: none !important;
+        padding: 0 !important;
+        max-width: 800px;
+        margin: 0 auto;
     }
     
     [data-testid="stChatMessageContent"] {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 16px !important;
-        color: #e4e4e7 !important;
-        font-family: 'Inter', sans-serif !important;
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+        font-family: 'IBM Plex Sans', sans-serif !important;
+        font-size: 14px !important;
+        line-height: 1.6 !important;
+        color: var(--text-primary) !important;
     }
     
     [data-testid="stChatMessageContent"] p {
-        color: #e4e4e7 !important;
+        color: var(--text-primary) !important;
+        margin: 0 !important;
     }
     
-    /* User message styling */
-    [data-testid="stChatMessage"][data-testid*="user"] [data-testid="stChatMessageContent"] {
-        background: rgba(249, 115, 22, 0.15) !important;
-        border: 1px solid rgba(249, 115, 22, 0.3) !important;
+    [data-testid="stChatMessageAvatarUser"] {
+        background: var(--accent-primary) !important;
+        border-radius: 8px !important;
     }
     
-    /* Chat input */
-    .stChatInput {
-        background: transparent !important;
+    [data-testid="stChatMessageAvatarAssistant"] {
+        background: var(--bg-tertiary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px !important;
     }
     
-    .stChatInput > div {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 28px !important;
+    /* Chat Input - Dark Theme */
+    .stChatInput,
+    [data-testid="stChatInput"],
+    .stChatInputContainer {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: #09090b !important;
+        padding: 16px 24px 20px 24px !important;
+        z-index: 999 !important;
+        border-top: 1px solid #27272a !important;
     }
     
-    .stChatInput textarea {
-        background: transparent !important;
-        color: #ffffff !important;
-        font-family: 'Inter', sans-serif !important;
-        caret-color: #f97316 !important;
+    .stChatInput > div,
+    [data-testid="stChatInput"] > div,
+    .stChatInput [data-baseweb="textarea"],
+    [data-testid="stChatInputTextArea"],
+    .stChatInput div[data-baseweb] {
+        background: #18181b !important;
+        border: 1px solid #3f3f46 !important;
+        border-radius: 24px !important;
     }
     
-    .stChatInput textarea::placeholder {
+    .stChatInput textarea,
+    [data-testid="stChatInput"] textarea,
+    .stChatInput input,
+    [data-testid="stChatInputTextArea"] textarea {
+        background: #18181b !important;
+        background-color: #18181b !important;
+        color: #fafafa !important;
+        font-family: 'IBM Plex Sans', sans-serif !important;
+        font-size: 15px !important;
+        caret-color: #fafafa !important;
+        border: none !important;
+        border-radius: 24px !important;
+    }
+    
+    .stChatInput textarea::placeholder,
+    [data-testid="stChatInput"] textarea::placeholder {
         color: #71717a !important;
     }
     
-    .stChatInput button {
-        background: linear-gradient(135deg, #ef4444 0%, #f97316 100%) !important;
+    /* Send button */
+    .stChatInput button,
+    [data-testid="stChatInput"] button {
+        background: #f97316 !important;
         border: none !important;
         border-radius: 50% !important;
     }
     
-    /* Action buttons */
-    .action-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 0.75rem;
-        margin-top: 1rem;
-        flex-wrap: wrap;
+    .stChatInput button:hover,
+    [data-testid="stChatInput"] button:hover {
+        background: #fb923c !important;
     }
     
-    .action-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.6rem 1.2rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 24px;
-        color: #a1a1aa;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
+    /* Force dark background on all input elements */
+    .stChatInput *,
+    [data-testid="stChatInput"] * {
+        background-color: transparent !important;
     }
     
-    .action-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.25);
-        color: #ffffff;
+    .stChatInput > div > div,
+    [data-testid="stChatInput"] > div > div {
+        background: #18181b !important;
     }
     
-    /* Streamlit button overrides */
+    /* Bottom padding for content */
+    .main .block-container {
+        padding-bottom: 100px !important;
+    }
+    
+    /* Remove any white backgrounds */
+    .stTextInput > div > div,
+    [data-baseweb="input"],
+    [data-baseweb="textarea"] {
+        background: #18181b !important;
+        border-color: #3f3f46 !important;
+    }
+    
+    /* Streamlit Overrides */
     .stButton > button {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 24px !important;
-        color: #a1a1aa !important;
-        font-family: 'Inter', sans-serif !important;
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px !important;
+        color: var(--text-secondary) !important;
+        font-family: 'IBM Plex Sans', sans-serif !important;
+        font-size: 13px !important;
         font-weight: 500 !important;
-        transition: all 0.2s ease !important;
+        padding: 8px 16px !important;
+        transition: all 0.15s ease !important;
     }
     
     .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border-color: rgba(255, 255, 255, 0.25) !important;
-        color: #ffffff !important;
+        background: var(--bg-tertiary) !important;
+        border-color: var(--text-muted) !important;
+        color: var(--text-primary) !important;
     }
     
-    /* Divider */
-    hr {
-        border: none !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-        margin: 1rem 0 !important;
-    }
-    
-    /* Caption styling */
     .stCaption {
-        color: #71717a !important;
-        font-family: 'Inter', sans-serif !important;
+        font-family: 'IBM Plex Mono', monospace !important;
+        font-size: 12px !important;
+        color: var(--text-muted) !important;
     }
     
-    /* Hide default avatars and restyle */
-    [data-testid="stChatMessageAvatarUser"],
-    [data-testid="stChatMessageAvatarAssistant"] {
-        background: linear-gradient(135deg, #ef4444 0%, #f97316 100%) !important;
-    }
-    
-    /* Markdown text in chat */
     .stMarkdown {
-        color: #e4e4e7 !important;
+        color: var(--text-primary) !important;
     }
     
-    /* Unsecured indicator */
-    .unsecured-badge {
-        position: fixed;
-        top: 1rem;
-        right: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.4rem 0.8rem;
-        background: rgba(239, 68, 68, 0.15);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        border-radius: 20px;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.8rem;
-        color: #fca5a5;
+    .stError {
+        background: rgba(239, 68, 68, 0.1) !important;
+        border: 1px solid rgba(239, 68, 68, 0.2) !important;
+        border-radius: 8px !important;
+        color: var(--error) !important;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -362,83 +499,101 @@ def main():
     # Initialize
     if "messages" not in st.session_state:
         st.session_state.messages = []
+    if "query_count" not in st.session_state:
+        st.session_state.query_count = 0
     
     # Load model
     tokenizer, model, device = load_model()
     
-    # Unsecured badge (top right)
-    st.markdown("""
-    <div class="unsecured-badge">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            <line x1="4" y1="4" x2="20" y2="20" stroke="#fca5a5" stroke-width="2"/>
-        </svg>
-        Unsecured
-    </div>
-    """, unsafe_allow_html=True)
+    # Render navigation bar
+    model_status = "active" if model else "inactive"
+    device_name = device.upper() if device else "N/A"
     
-    # Show welcome screen if no messages
-    if not st.session_state.messages:
-        # Centered logo
-        st.markdown("""
-        <div class="logo-container">
-            <div class="logo-icon">
+    st.markdown(f"""
+    <div class="nav-bar">
+        <div class="nav-brand">
+            <div class="nav-logo">
                 <svg viewBox="0 0 24 24" fill="white">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
             </div>
-            <span class="logo-text">Veil Armor</span>
-            <span class="logo-subtitle">Unsecured Mode</span>
+            <span class="nav-title">Veil Armor</span>
+            <span class="nav-mode">Baseline</span>
         </div>
-        """, unsafe_allow_html=True)
-        
-        # Warning banner
-        st.markdown("""
-        <div class="warning-banner">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                <line x1="12" y1="9" x2="12" y2="13"></line>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            This is an uncensored model with no security protection. For testing only.
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Status bar
-        model_status = "online" if model else "offline"
-        device_name = device.upper() if device else "N/A"
-        
-        st.markdown(f"""
-        <div class="status-bar">
-            <div class="status-item">
-                <span class="status-dot status-offline"></span>
-                Security: Disabled
+        <div class="nav-status">
+            <div class="status-indicator">
+                <span class="status-dot disabled"></span>
+                Security: Off
             </div>
-            <div class="status-item">
-                <span class="status-dot status-{model_status}"></span>
+            <div class="status-indicator">
+                <span class="status-dot {model_status}"></span>
                 Model ({device_name})
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        <div class="nav-actions">
+            <span style="font-size: 12px; color: var(--text-muted);">
+                Session: {st.session_state.query_count} queries
+            </span>
+        </div>
+    </div>
+    <div class="content-wrapper">
+    """, unsafe_allow_html=True)
     
     # Check model
     if not model:
-        st.error("Model not loaded. Please check configuration.")
+        st.error("Model initialization failed. Check configuration and restart.")
         return
+    
+    # Welcome state
+    if not st.session_state.messages:
+        st.markdown("""
+        <div class="welcome-container">
+            <div class="welcome-icon">
+                <svg viewBox="0 0 24 24" fill="white">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <div class="welcome-title">Veil Armor</div>
+            <div class="welcome-subtitle">Baseline Mode - No Security Filters</div>
+            <div class="warning-box">
+                <div class="warning-box-title">Research Mode Active</div>
+                <div class="warning-box-text">
+                    Security protections are disabled. This interface serves as a baseline 
+                    for comparing model behavior with and without Veil Armor protection.
+                </div>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card disabled">
+                    <div class="feature-card-title">Input Scanning</div>
+                    <div class="feature-card-desc">Disabled</div>
+                </div>
+                <div class="feature-card disabled">
+                    <div class="feature-card-title">PII Protection</div>
+                    <div class="feature-card-desc">Disabled</div>
+                </div>
+                <div class="feature-card disabled">
+                    <div class="feature-card-title">Output Filtering</div>
+                    <div class="feature-card-desc">Disabled</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Chat history
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
     
+    st.markdown("</div>", unsafe_allow_html=True)
+    
     # Chat input
-    if prompt := st.chat_input("What do you want to know?"):
-        # Show user message
+    if prompt := st.chat_input("Enter your query..."):
+        st.session_state.query_count += 1
+        
         with st.chat_message("user"):
             st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
         
-        # Generate with streaming
         with st.chat_message("assistant"):
             model_messages = [
                 {"role": m["role"], "content": m["content"]}
@@ -456,10 +611,10 @@ def main():
             if streamer:
                 for chunk in streamer:
                     full_response += chunk
-                    placeholder.markdown(full_response + "|")
+                    placeholder.markdown(full_response + "...")
                 placeholder.markdown(full_response)
             else:
-                full_response = "Error generating response."
+                full_response = "Generation failed. Please try again."
                 placeholder.markdown(full_response)
         
         st.session_state.messages.append({
@@ -467,38 +622,13 @@ def main():
             "content": full_response
         })
     
-    # Action buttons at the bottom (only show when no messages)
-    if not st.session_state.messages:
-        st.markdown("""
-        <div class="action-buttons">
-            <div class="action-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                </svg>
-                Search
-            </div>
-            <div class="action-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                Chat
-            </div>
-            <div class="action-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-                Generate
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Clear button (only show when there are messages)
+    # Clear button
     if st.session_state.messages:
-        col1, col2, col3 = st.columns([1, 1, 1])
+        col1, col2, col3 = st.columns([2, 1, 2])
         with col2:
-            if st.button("Clear conversation", use_container_width=True):
+            if st.button("Clear Session", use_container_width=True):
                 st.session_state.messages = []
+                st.session_state.query_count = 0
                 st.rerun()
 
 

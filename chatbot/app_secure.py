@@ -1,5 +1,5 @@
-"""Veil Armor Secure Chat - Professional Edition
-Clean, minimal dashboard with streaming responses.
+"""Veil Armor Secure Chat - Research Edition
+Professional interface for LLM security research.
 """
 import streamlit as st
 import torch
@@ -31,261 +31,399 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Professional Dark Theme CSS (Grok-style)
+# Professional Research UI CSS
 st.markdown("""
 <style>
-    /* Import font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
     
-    /* Hide Streamlit branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    .stDeployButton {display: none;}
+    :root {
+        --bg-primary: #09090b;
+        --bg-secondary: #18181b;
+        --bg-tertiary: #27272a;
+        --border-color: #3f3f46;
+        --text-primary: #fafafa;
+        --text-secondary: #a1a1aa;
+        --text-muted: #71717a;
+        --accent-primary: #6366f1;
+        --accent-secondary: #818cf8;
+        --success: #22c55e;
+        --warning: #eab308;
+        --error: #ef4444;
+    }
     
-    /* Dark theme base */
+    #MainMenu, footer, header, .stDeployButton {display: none !important;}
+    
     .stApp {
-        background-color: #0d0d0d !important;
+        background: var(--bg-primary) !important;
+        font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
     
     .main .block-container {
-        padding: 2rem 2rem;
-        max-width: 900px;
-        margin: 0 auto;
+        padding: 0 !important;
+        max-width: 100% !important;
     }
     
-    /* Logo and branding */
-    .logo-container {
+    /* Top Navigation Bar */
+    .nav-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        z-index: 1000;
+    }
+    
+    .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .nav-logo {
+        width: 32px;
+        height: 32px;
+        background: var(--accent-primary);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .nav-logo svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .nav-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.3px;
+    }
+    
+    .nav-status {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+    
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+    
+    .status-dot.active { background: var(--success); }
+    .status-dot.inactive { background: var(--error); }
+    
+    .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .nav-btn {
+        padding: 6px 12px;
+        background: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    
+    .nav-btn:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+    }
+    
+    /* Main Content Area */
+    .content-wrapper {
+        margin-top: 56px;
+        height: calc(100vh - 56px);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* Welcome State */
+    .welcome-container {
+        flex: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 3rem 0 2rem 0;
+        padding: 48px 24px;
     }
     
-    .logo-icon {
-        width: 64px;
-        height: 64px;
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    .welcome-icon {
+        width: 72px;
+        height: 72px;
+        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
         border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 1rem;
+        margin-bottom: 24px;
     }
     
-    .logo-icon svg {
+    .welcome-icon svg {
         width: 36px;
         height: 36px;
-        fill: white;
     }
     
-    .logo-text {
-        font-family: 'Inter', sans-serif;
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #ffffff;
+    .welcome-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
         letter-spacing: -0.5px;
     }
     
-    /* Status indicators */
-    .status-bar {
-        display: flex;
-        justify-content: center;
-        gap: 2rem;
-        padding: 0.75rem 1.5rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        margin: 1rem auto 2rem auto;
-        max-width: 500px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+    .welcome-subtitle {
+        font-size: 15px;
+        color: var(--text-muted);
+        margin-bottom: 32px;
     }
     
-    .status-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.85rem;
-        color: #a1a1aa;
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        max-width: 600px;
+        width: 100%;
     }
     
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
+    .feature-card {
+        padding: 16px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        text-align: center;
     }
     
-    .status-online { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.5); }
-    .status-offline { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+    .feature-card-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
     
-    /* Chat messages */
+    .feature-card-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+    
+    /* Chat Styles */
     .stChatMessage {
         background: transparent !important;
-        border: none !important;
+        padding: 0 !important;
+        max-width: 800px;
+        margin: 0 auto;
     }
     
     [data-testid="stChatMessageContent"] {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 16px !important;
-        color: #e4e4e7 !important;
-        font-family: 'Inter', sans-serif !important;
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+        font-family: 'IBM Plex Sans', sans-serif !important;
+        font-size: 14px !important;
+        line-height: 1.6 !important;
+        color: var(--text-primary) !important;
     }
     
     [data-testid="stChatMessageContent"] p {
-        color: #e4e4e7 !important;
+        color: var(--text-primary) !important;
+        margin: 0 !important;
     }
     
-    /* User message styling */
-    [data-testid="stChatMessage"][data-testid*="user"] [data-testid="stChatMessageContent"] {
-        background: rgba(99, 102, 241, 0.15) !important;
-        border: 1px solid rgba(99, 102, 241, 0.3) !important;
+    [data-testid="stChatMessageAvatarUser"] {
+        background: var(--accent-primary) !important;
+        border-radius: 8px !important;
     }
     
-    /* Chat input */
-    .stChatInput {
-        background: transparent !important;
+    [data-testid="stChatMessageAvatarAssistant"] {
+        background: var(--bg-tertiary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px !important;
     }
     
-    .stChatInput > div {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 28px !important;
+    /* Chat Input - Dark Theme */
+    .stChatInput,
+    [data-testid="stChatInput"],
+    .stChatInputContainer {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: #09090b !important;
+        padding: 16px 24px 20px 24px !important;
+        z-index: 999 !important;
+        border-top: 1px solid #27272a !important;
     }
     
-    .stChatInput textarea {
-        background: transparent !important;
-        color: #ffffff !important;
-        font-family: 'Inter', sans-serif !important;
-        caret-color: #6366f1 !important;
+    .stChatInput > div,
+    [data-testid="stChatInput"] > div,
+    .stChatInput [data-baseweb="textarea"],
+    [data-testid="stChatInputTextArea"],
+    .stChatInput div[data-baseweb] {
+        background: #18181b !important;
+        border: 1px solid #3f3f46 !important;
+        border-radius: 24px !important;
     }
     
-    .stChatInput textarea::placeholder {
+    .stChatInput textarea,
+    [data-testid="stChatInput"] textarea,
+    .stChatInput input,
+    [data-testid="stChatInputTextArea"] textarea {
+        background: #18181b !important;
+        background-color: #18181b !important;
+        color: #fafafa !important;
+        font-family: 'IBM Plex Sans', sans-serif !important;
+        font-size: 15px !important;
+        caret-color: #fafafa !important;
+        border: none !important;
+        border-radius: 24px !important;
+    }
+    
+    .stChatInput textarea::placeholder,
+    [data-testid="stChatInput"] textarea::placeholder {
         color: #71717a !important;
     }
     
-    .stChatInput button {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    /* Send button */
+    .stChatInput button,
+    [data-testid="stChatInput"] button {
+        background: #6366f1 !important;
         border: none !important;
         border-radius: 50% !important;
     }
     
-    /* Action buttons */
-    .action-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 0.75rem;
-        margin-top: 1rem;
-        flex-wrap: wrap;
+    .stChatInput button:hover,
+    [data-testid="stChatInput"] button:hover {
+        background: #818cf8 !important;
     }
     
-    .action-btn {
+    /* Force dark background on all input elements */
+    .stChatInput *,
+    [data-testid="stChatInput"] * {
+        background-color: transparent !important;
+    }
+    
+    .stChatInput > div > div,
+    [data-testid="stChatInput"] > div > div {
+        background: #18181b !important;
+    }
+    
+    /* Bottom padding for content */
+    .main .block-container {
+        padding-bottom: 100px !important;
+    }
+    
+    /* Remove any white backgrounds */
+    .stTextInput > div > div,
+    [data-baseweb="input"],
+    [data-baseweb="textarea"] {
+        background: #18181b !important;
+        border-color: #3f3f46 !important;
+    }
+    
+    /* Security Status Badge */
+    .security-status {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.6rem 1.2rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 24px;
-        color: #a1a1aa;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
+        gap: 6px;
+        padding: 4px 10px;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 6px;
+        font-size: 12px;
+        font-family: 'IBM Plex Mono', monospace;
+        color: var(--success);
+        margin-top: 8px;
     }
     
-    .action-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.25);
-        color: #ffffff;
+    .security-status.warning {
+        background: rgba(234, 179, 8, 0.1);
+        border-color: rgba(234, 179, 8, 0.2);
+        color: var(--warning);
     }
     
-    /* Security badge */
-    .security-caption {
-        font-family: 'Inter', sans-serif;
-        font-size: 0.75rem;
-        color: #71717a;
-        margin-top: 0.5rem;
+    .security-status.error {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.2);
+        color: var(--error);
     }
     
-    .security-caption.safe { color: #22c55e; }
-    .security-caption.warn { color: #f59e0b; }
-    .security-caption.block { color: #ef4444; }
-    
-    /* Streamlit button overrides */
+    /* Streamlit Overrides */
     .stButton > button {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 24px !important;
-        color: #a1a1aa !important;
-        font-family: 'Inter', sans-serif !important;
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px !important;
+        color: var(--text-secondary) !important;
+        font-family: 'IBM Plex Sans', sans-serif !important;
+        font-size: 13px !important;
         font-weight: 500 !important;
-        transition: all 0.2s ease !important;
+        padding: 8px 16px !important;
+        transition: all 0.15s ease !important;
     }
     
     .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border-color: rgba(255, 255, 255, 0.25) !important;
-        color: #ffffff !important;
+        background: var(--bg-tertiary) !important;
+        border-color: var(--text-muted) !important;
+        color: var(--text-primary) !important;
     }
     
-    /* Stats display */
-    .stats-container {
-        display: flex;
-        justify-content: center;
-        gap: 1.5rem;
-        margin-top: 0.5rem;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.8rem;
-        color: #52525b;
-    }
-    
-    .stat-item {
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
-    }
-    
-    /* Divider */
-    hr {
-        border: none !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-        margin: 1rem 0 !important;
-    }
-    
-    /* Caption styling */
     .stCaption {
-        color: #71717a !important;
-        font-family: 'Inter', sans-serif !important;
+        font-family: 'IBM Plex Mono', monospace !important;
+        font-size: 12px !important;
+        color: var(--text-muted) !important;
     }
     
-    /* Hide default avatars and restyle */
-    [data-testid="stChatMessageAvatarUser"],
-    [data-testid="stChatMessageAvatarAssistant"] {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-    }
-    
-    /* Markdown text in chat */
     .stMarkdown {
-        color: #e4e4e7 !important;
+        color: var(--text-primary) !important;
     }
     
-    /* Private indicator */
-    .private-badge {
-        position: fixed;
-        top: 1rem;
-        right: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.4rem 0.8rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 20px;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.8rem;
-        color: #71717a;
+    .stError {
+        background: rgba(239, 68, 68, 0.1) !important;
+        border: 1px solid rgba(239, 68, 68, 0.2) !important;
+        border-radius: 8px !important;
+        color: var(--error) !important;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -386,76 +524,95 @@ def main():
     security = load_security()
     api_online = security.is_api_available() if security else False
     
-    # Private badge (top right)
-    st.markdown("""
-    <div class="private-badge">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
-        Private
-    </div>
-    """, unsafe_allow_html=True)
+    # Render navigation bar
+    api_status = "active" if api_online else "inactive"
+    model_status = "active" if model else "inactive"
+    device_name = device.upper() if device else "N/A"
     
-    # Show welcome screen if no messages
-    if not st.session_state.messages:
-        # Centered logo
-        st.markdown("""
-        <div class="logo-container">
-            <div class="logo-icon">
+    st.markdown(f"""
+    <div class="nav-bar">
+        <div class="nav-brand">
+            <div class="nav-logo">
                 <svg viewBox="0 0 24 24" fill="white">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
             </div>
-            <span class="logo-text">Veil Armor</span>
+            <span class="nav-title">Veil Armor</span>
         </div>
-        """, unsafe_allow_html=True)
-        
-        # Status bar
-        api_status = "online" if api_online else "offline"
-        model_status = "online" if model else "offline"
-        device_name = device.upper() if device else "N/A"
-        
-        st.markdown(f"""
-        <div class="status-bar">
-            <div class="status-item">
-                <span class="status-dot status-{api_status}"></span>
+        <div class="nav-status">
+            <div class="status-indicator">
+                <span class="status-dot {api_status}"></span>
                 Security API
             </div>
-            <div class="status-item">
-                <span class="status-dot status-{model_status}"></span>
+            <div class="status-indicator">
+                <span class="status-dot {model_status}"></span>
                 Model ({device_name})
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        <div class="nav-actions">
+            <span style="font-size: 12px; color: var(--text-muted);">
+                Session: {st.session_state.stats['total']} queries
+            </span>
+        </div>
+    </div>
+    <div class="content-wrapper">
+    """, unsafe_allow_html=True)
     
     # Check model
     if not model:
-        st.error("Model not loaded. Please check configuration.")
+        st.error("Model initialization failed. Check configuration and restart.")
         return
     
-    # Chat history display
+    # Welcome state (no messages)
+    if not st.session_state.messages:
+        st.markdown("""
+        <div class="welcome-container">
+            <div class="welcome-icon">
+                <svg viewBox="0 0 24 24" fill="white">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <div class="welcome-title">Veil Armor</div>
+            <div class="welcome-subtitle">Secure LLM Interface with Real-time Threat Detection</div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-card-title">Input Scanning</div>
+                    <div class="feature-card-desc">Prompt injection detection</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card-title">PII Protection</div>
+                    <div class="feature-card-desc">Automatic data redaction</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card-title">Output Filtering</div>
+                    <div class="feature-card-desc">Response sanitization</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Chat history
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
             if "security" in msg and msg["role"] == "assistant":
                 sec = msg["security"]
                 if sec.get("input_action") == "block":
-                    st.caption("Input blocked")
+                    st.markdown('<div class="security-status error">BLOCKED</div>', unsafe_allow_html=True)
                 elif sec.get("input_action") == "redact":
-                    st.caption(f"{sec.get('pii_count', 0)} items redacted")
+                    st.markdown(f'<div class="security-status warning">REDACTED: {sec.get("pii_count", 0)} items</div>', unsafe_allow_html=True)
                 elif sec.get("output_redacted", 0) > 0:
-                    st.caption("Output filtered")
+                    st.markdown('<div class="security-status warning">FILTERED</div>', unsafe_allow_html=True)
                 else:
-                    st.caption("Verified secure")
+                    st.markdown('<div class="security-status">VERIFIED</div>', unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
     
     # Chat input
-    if prompt := st.chat_input("What do you want to know?"):
+    if prompt := st.chat_input("Enter your query..."):
         st.session_state.stats["total"] += 1
         
-        # Security check input FIRST (before storing anything)
         security_info = {}
-        should_block = False
         processed_prompt = prompt
         
         if security and api_online:
@@ -464,25 +621,22 @@ def main():
             security_info["pii_count"] = input_sec.get("pii_count", 0)
             
             if not should_continue:
-                should_block = True
                 st.session_state.stats["blocked"] += 1
                 
-                # Show blocked message (but DON'T store the original content)
                 with st.chat_message("user"):
-                    st.markdown("*[Message blocked - security threat detected]*")
+                    st.markdown("[Content blocked]")
                 
                 with st.chat_message("assistant"):
-                    st.markdown("**Security Alert**: Your message was blocked due to detected security threats (prompt injection, jailbreak attempt, or PII). Please rephrase your request.")
-                    st.caption("Input blocked")
+                    st.markdown("Request blocked. Security scan detected potential threats including prompt injection, jailbreak patterns, or sensitive data. Modify your input and retry.")
+                    st.markdown('<div class="security-status error">BLOCKED</div>', unsafe_allow_html=True)
                 
-                # Store sanitized placeholder instead of actual content
                 st.session_state.messages.append({
                     "role": "user",
-                    "content": "[Message blocked by security]"
+                    "content": "[Blocked by security]"
                 })
                 st.session_state.messages.append({
                     "role": "assistant",
-                    "content": "I cannot process that request due to security concerns. Please try a different question.",
+                    "content": "Request blocked due to security policy.",
                     "security": security_info
                 })
                 st.rerun()
@@ -491,21 +645,17 @@ def main():
             if input_sec.get("action") == "redact":
                 st.session_state.stats["sanitized"] += 1
         
-        # Show user message (only if not blocked)
         with st.chat_message("user"):
             st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": processed_prompt})
         
-        # Generate response with streaming
         with st.chat_message("assistant"):
-            # Build messages for model (use processed/sanitized content only)
             model_messages = [
                 {"role": m["role"], "content": m["content"]}
                 for m in st.session_state.messages[:-1]
             ]
             model_messages.append({"role": "user", "content": processed_prompt})
             
-            # Stream response
             placeholder = st.empty()
             full_response = ""
             
@@ -517,14 +667,12 @@ def main():
             if streamer:
                 for chunk in streamer:
                     full_response += chunk
-                    placeholder.markdown(full_response + "|")
-                
+                    placeholder.markdown(full_response + "...")
                 placeholder.markdown(full_response)
             else:
-                full_response = "Sorry, I encountered an error generating a response."
+                full_response = "Generation failed. Please try again."
                 placeholder.markdown(full_response)
             
-            # Security check output
             if security and api_online and full_response:
                 safe_response, output_sec = security.process_output(full_response)
                 security_info["output_redacted"] = output_sec.get("pii_redacted", 0)
@@ -533,62 +681,25 @@ def main():
                     placeholder.markdown(safe_response)
                     full_response = safe_response
             
-            # Show security status
             if security_info.get("input_action") == "redact":
-                st.caption(f"{security_info.get('pii_count', 0)} items redacted from input")
+                st.markdown(f'<div class="security-status warning">REDACTED: {security_info.get("pii_count", 0)} items</div>', unsafe_allow_html=True)
             elif security_info.get("output_redacted", 0) > 0:
-                st.caption("Output filtered")
+                st.markdown('<div class="security-status warning">FILTERED</div>', unsafe_allow_html=True)
             else:
-                st.caption("Verified secure")
+                st.markdown('<div class="security-status">VERIFIED</div>', unsafe_allow_html=True)
                 st.session_state.stats["clean"] += 1
         
-        # Save to history
         st.session_state.messages.append({
             "role": "assistant",
             "content": full_response,
             "security": security_info
         })
     
-    # Action buttons at the bottom (only show when no messages)
-    if not st.session_state.messages:
-        st.markdown("""
-        <div class="action-buttons">
-            <div class="action-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                </svg>
-                Secure Search
-            </div>
-            <div class="action-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-                Protected Mode
-            </div>
-            <div class="action-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                Chat
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Stats at the very bottom
-        st.markdown(f"""
-        <div class="stats-container">
-            <div class="stat-item">Blocked: {st.session_state.stats['blocked']}</div>
-            <div class="stat-item">Clean: {st.session_state.stats['clean']}</div>
-            <div class="stat-item">Total: {st.session_state.stats['total']}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Clear button in sidebar area (subtle placement)
+    # Clear button
     if st.session_state.messages:
-        col1, col2, col3 = st.columns([1, 1, 1])
+        col1, col2, col3 = st.columns([2, 1, 2])
         with col2:
-            if st.button("Clear conversation", use_container_width=True):
+            if st.button("Clear Session", use_container_width=True):
                 st.session_state.messages = []
                 st.session_state.stats = {"total": 0, "blocked": 0, "sanitized": 0, "clean": 0}
                 st.rerun()
