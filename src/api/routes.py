@@ -46,6 +46,8 @@ async def health_check(settings: Settings = Depends(get_settings)):
     )
 
 
+
+# /process: Full pipeline (classify → sanitize → LLM → classify output → sanitize output)
 @router.post(
     "/api/v1/process",
     response_model=PromptResponse,
@@ -61,26 +63,97 @@ async def process_prompt(
     pipeline: SecurityPipeline = Depends(get_pipeline)
 ):
     """
-    Process a user prompt through the security pipeline.
-    
-    The pipeline will:
-    1. Classify the prompt for threats
-    2. Decide to BLOCK, SANITIZE, or PASS
-    3. If not blocked, send to LLM and return response
-    4. Analyze and sanitize the response before returning
+    Full pipeline: classify → sanitize → LLM → classify output → sanitize output
     """
     try:
         logger.info(f"Processing request from user: {request.user_id or 'anonymous'}")
-        
         result = await pipeline.process(
             prompt=request.prompt,
             user_id=request.user_id
         )
-        
         return PromptResponse(**result.to_dict())
-    
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+
+# /sanitize: Only runs the sanitizer on the prompt (optionally, after classification)
+@router.post(
+    "/api/v1/sanitize",
+    tags=["Security"]
+)
+async def sanitize_prompt(
+    request: PromptRequest,
+    pipeline: SecurityPipeline = Depends(get_pipeline)
+):
+    """
+    Sanitize a prompt (redact/cut malicious or sensitive parts).
+    """
+    try:
+        sanitized = pipeline.input_sanitizer.sanitize(request.prompt)
+        return {
+            "original": request.prompt,
+            "sanitized": sanitized
+        }
+    except Exception as e:
+        logger.error(f"Error sanitizing request: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+# /classify-output: Classifies the LLM output for sensitive data disclosure
+@router.post(
+    "/api/v1/classify-output",
+    tags=["Security"]
+)
+async def classify_output(
+    request: PromptRequest,
+    pipeline: SecurityPipeline = Depends(get_pipeline)
+):
+    """
+    Classify LLM output for sensitive data disclosure (no LLM call).
+    """
+    try:
+        classification = pipeline.classifier.classify(request.prompt)
+        return {
+            "output": request.prompt[:100] + "..." if len(request.prompt) > 100 else request.prompt,
+            "threats": classification.threats,
+            "severity": classification.severity,
+            "confidence": classification.confidence,
+            "details": classification.details
+        }
+    except Exception as e:
+        logger.error(f"Error classifying output: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+# /sanitize-output: Sanitizes the LLM output
+@router.post(
+    "/api/v1/sanitize-output",
+    tags=["Security"]
+)
+async def sanitize_output(
+    request: PromptRequest,
+    pipeline: SecurityPipeline = Depends(get_pipeline)
+):
+    """
+    Sanitize LLM output (redact/cut sensitive parts).
+    """
+    try:
+        sanitized = pipeline.output_sanitizer.sanitize(request.prompt)
+        return {
+            "original": request.prompt,
+            "sanitized": sanitized
+        }
+    except Exception as e:
+        logger.error(f"Error sanitizing output: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=str(e)
