@@ -1,4 +1,4 @@
-# Veil Armor Production Dockerfile
+# Veil Armor (2025) Production Dockerfile
 # Build with vigil-llm and all dependencies
 
 FROM python:3.11-slim
