@@ -1,7 +1,7 @@
 # API endpoints
 """API routes"""
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import Optional
 
 from .models import PromptRequest, PromptResponse, HealthResponse, ErrorResponse
@@ -13,16 +13,19 @@ logger = get_logger(__name__)
 
 router = APIRouter()
 
-# Global pipeline instance (initialized on startup)
-_pipeline: Optional[SecurityPipeline] = None
 
-
-def get_pipeline() -> SecurityPipeline:
-    """Dependency to get the security pipeline"""
-    global _pipeline
-    if _pipeline is None:
-        _pipeline = SecurityPipeline()
-    return _pipeline
+def get_pipeline(request: Request) -> SecurityPipeline:
+    """
+    Dependency to get the security pipeline from app state.
+    Uses the pipeline initialized during app lifespan (server.py).
+    """
+    pipeline = getattr(request.app.state, "pipeline", None)
+    if pipeline is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Security pipeline not initialized. Server is starting up."
+        )
+    return pipeline
 
 
 @router.get("/health", response_model=HealthResponse, tags=["System"])
