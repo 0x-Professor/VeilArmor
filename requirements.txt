@@ -1,4 +1,4 @@
-# VeilArmor Dependencies
+# Dependencies
 
 # Web Framework
 fastapi==0.109.0
