@@ -1,5 +1,7 @@
 """Production-ready FastAPI server for Veil Armor.
 Real implementation with all security features integrated.
+
+Version: 2.0.0-alpha (New Architecture Branch)
 """
 from fastapi import FastAPI, HTTPException, Depends, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
