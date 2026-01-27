@@ -1,0 +1,31 @@
+# VeilArmor Configuration
+app:
+  name: "VeilArmor"
+  version: "1.0.0"
+  debug: true
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+
+security:
+  # Severity thresholds
+  block_severity: ["CRITICAL", "HIGH"]
+  sanitize_severity: ["MEDIUM", "LOW"]
+  
+  # Classifier settings
+  classifier:
+    confidence_threshold: 0.7
+  
+  # Sanitizer settings
+  sanitizer:
+    redact_pii: true
+    redact_placeholder: "[REDACTED]"
+
+llm:
+  provider: "dummy"  # Options: dummy, openai, gemini
+  timeout: 30
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
