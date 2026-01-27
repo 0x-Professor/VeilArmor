@@ -12,6 +12,7 @@ Veil Armor is an enterprise-grade security framework for Large Language Models (
 
 ## Architecture
 
+### Technical Architecture
 ```rust
 ┌─────────────────────────────────────────────────────────────────┐
 │                        YOUR REQUEST                             │
@@ -46,6 +47,28 @@ Veil Armor is an enterprise-grade security framework for Large Language Models (
 │  }                                                              │
 └─────────────────────────────────────────────────────────────────┘
 ```
+### Component Architecture
+```mermaid
+graph TD
+    User[User Request] --> API[FastAPI Endpoint]
+    API --> Pipeline[Security Pipeline]
+    
+    subgraph "Security Pipeline (Sequential)"
+        Pipeline --> Classifier[Threat Classifier]
+        Classifier -- Regex Patterns --> Decision{Decision}
+        
+        Decision -- "BLOCK" --> BlockResponse[Block Request]
+        Decision -- "SANITIZE" --> InputSanitizer[Input Sanitizer]
+        Decision -- "PASS" --> LLM
+        
+        InputSanitizer -- "Regex Redaction" --> LLM[LLM Gateway]
+        LLM -- "Dummy Response" --> OutputAnalysis[Output Classifier]
+        OutputAnalysis --> OutputSanitizer[Output Sanitizer]
+    end
+    
+    OutputSanitizer --> Response[Final Response]
+```
+
 ## Requirements
 - Python 3.11+
 - Docker (optional, for containerized deployment)
