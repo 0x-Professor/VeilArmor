@@ -2,7 +2,7 @@
 Veil Armor is an enterprise-grade security framework for Large Language Models (LLMs) that provides multi-layered protection against prompt injections, jailbreaks, PII leakage, and sophisticated attack vectors.
 
 ## Key Features
-- 100% Attack Detection Rate - Tested against 42 zero-day attack vectors
+
 - Prompt Injection Detection - Real-time detection using Vigil TransformerScanner
 - Jailbreak Prevention - 30+ custom regex patterns for bypasses Vigil misses
 - PII Protection - Microsoft Presidio integration for sensitive data detection
