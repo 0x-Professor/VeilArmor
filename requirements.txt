@@ -1,22 +1,76 @@
-# Dependencies
+# VeilArmor v2.0 - Enterprise LLM Security Framework
+# Python 3.11+ required
 
 # Web Framework
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-pydantic==2.5.3
-pydantic-settings==2.1.0
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.3
+pydantic-settings>=2.1.0
+python-multipart>=0.0.6
+starlette>=0.35.0
+
+# LLM Integration
+litellm>=1.25.0
+openai>=1.10.0
+anthropic>=0.18.0
+google-generativeai>=0.3.2
+huggingface-hub>=0.20.0
+tiktoken>=0.5.2
+
+# Caching & Embeddings
+redis>=5.0.1
+sentence-transformers>=2.3.1
+faiss-cpu>=1.7.4
+numpy>=1.26.0
+
+# NLP & Security
+spacy>=3.7.2
+regex>=2023.12.25
+validators>=0.22.0
 
 # Configuration
-pyyaml==6.0.1
-python-dotenv==1.0.0
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+
+# Logging & Monitoring
+structlog>=24.1.0
+python-json-logger>=2.0.7
+prometheus-client>=0.19.0
+colorama>=0.4.6
+
+# HTTP & Async
+httpx>=0.26.0
+aiofiles>=23.2.1
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+cryptography>=41.0.0
+
+# Rate Limiting
+slowapi>=0.1.9
+limits>=3.6.0
 
 # Utilities
-httpx==0.26.0
+tenacity>=8.2.3
+cachetools>=5.3.2
+xxhash>=3.4.1
+orjson>=3.9.10
 
 # Testing
-pytest==7.4.4
-pytest-asyncio==0.23.3
+pytest>=7.4.4
+pytest-asyncio>=0.23.3
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+respx>=0.20.2
+fakeredis>=2.20.0
 
 # Development
-black==24.1.0
-isort==5.13.2
+black>=24.1.0
+isort>=5.13.2
+mypy>=1.8.0
+ruff>=0.1.14
+pre-commit>=3.6.0
+
+# Load Testing
+locust>=2.20.0
