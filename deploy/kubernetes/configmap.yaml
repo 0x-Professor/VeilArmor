@@ -1,0 +1,63 @@
+# VeilArmor v2.0 Kubernetes Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: veilarmor
+  labels:
+    app.kubernetes.io/name: veilarmor
+    app.kubernetes.io/component: security
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: veilarmor-config
+  namespace: veilarmor
+data:
+  settings.yaml: |
+    app:
+      name: VeilArmor
+      version: 2.0.0
+      debug: false
+      environment: production
+    
+    server:
+      host: "0.0.0.0"
+      port: 8000
+      workers: 4
+    
+    logging:
+      level: INFO
+      format: json
+      enable_colors: false
+    
+    security:
+      block_severity:
+        - CRITICAL
+        - HIGH
+      sanitize_severity:
+        - MEDIUM
+      classifier:
+        confidence_threshold: 0.7
+        parallel_execution: true
+        timeout_seconds: 5.0
+    
+    cache:
+      enabled: true
+      backend: redis
+      ttl_seconds: 3600
+      similarity_threshold: 0.95
+---
+# Secret for sensitive configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: veilarmor-secrets
+  namespace: veilarmor
+type: Opaque
+stringData:
+  # Replace with actual values or use external secrets management
+  OPENAI_API_KEY: ""
+  ANTHROPIC_API_KEY: ""
+  GOOGLE_API_KEY: ""
+  REDIS_PASSWORD: ""

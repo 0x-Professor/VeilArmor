@@ -1,0 +1,120 @@
+# VeilArmor v2.0 Kubernetes Service and Ingress
+apiVersion: v1
+kind: Service
+metadata:
+  name: veilarmor
+  namespace: veilarmor
+  labels:
+    app.kubernetes.io/name: veilarmor
+    app.kubernetes.io/component: api
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: veilarmor
+    app.kubernetes.io/component: api
+---
+# Service for internal Redis
+apiVersion: v1
+kind: Service
+metadata:
+  name: veilarmor-redis
+  namespace: veilarmor
+  labels:
+    app.kubernetes.io/name: veilarmor
+    app.kubernetes.io/component: redis
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+  selector:
+    app.kubernetes.io/name: veilarmor
+    app.kubernetes.io/component: redis
+---
+# Ingress for external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: veilarmor
+  namespace: veilarmor
+  labels:
+    app.kubernetes.io/name: veilarmor
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts:
+        - veilarmor.example.com
+      secretName: veilarmor-tls
+  rules:
+    - host: veilarmor.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: veilarmor
+                port:
+                  name: http
+---
+# Network Policy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: veilarmor-network-policy
+  namespace: veilarmor
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: veilarmor
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: veilarmor
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+    # Allow outbound HTTPS for LLM API calls
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443

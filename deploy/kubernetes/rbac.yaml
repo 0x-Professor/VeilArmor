@@ -1,0 +1,35 @@
+# VeilArmor v2.0 RBAC Configuration
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: veilarmor
+  namespace: veilarmor
+  labels:
+    app.kubernetes.io/name: veilarmor
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: veilarmor
+  namespace: veilarmor
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: veilarmor
+  namespace: veilarmor
+subjects:
+  - kind: ServiceAccount
+    name: veilarmor
+    namespace: veilarmor
+roleRef:
+  kind: Role
+  name: veilarmor
+  apiGroup: rbac.authorization.k8s.io
