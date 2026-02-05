@@ -13,8 +13,8 @@ from src.classifiers.base import (
     ClassificationResult,
     ClassifierType,
     register_classifier,
-    get_classifier,
-    get_all_classifiers,
+    get_classifier_class,
+    list_registered_classifiers,
 )
 from src.classifiers.manager import ClassifierManager
 
@@ -45,8 +45,8 @@ __all__ = [
     "ClassifierType",
     "ClassifierManager",
     "register_classifier",
-    "get_classifier",
-    "get_all_classifiers",
+    "get_classifier_class",
+    "list_registered_classifiers",
     # Input classifiers
     "PromptInjectionClassifier",
     "JailbreakClassifier",
