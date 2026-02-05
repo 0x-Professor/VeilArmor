@@ -38,6 +38,41 @@ router = APIRouter()
 
 
 # ---------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------
+
+def _format_change(change: dict) -> str:
+    """
+    Format a sanitization change dict into a human-readable string.
+    
+    Change dicts from strategies use keys like 'type', 'pii_type',
+    'replacement', 'category', 'action', 'original_preview', etc.
+    """
+    change_type = change.get("type", "unknown")
+    
+    # Build a descriptive label based on the change type
+    if change_type == "pii_redaction":
+        pii_type = change.get("pii_type", "unknown")
+        replacement = change.get("replacement", "[REDACTED]")
+        return f"pii_redaction: {pii_type} replaced with {replacement}"
+    elif change_type == "injection_neutralization":
+        category = change.get("category", "injection")
+        return f"injection_neutralization: {category} pattern neutralized"
+    elif change_type == "normalization":
+        action = change.get("action", "normalized")
+        return f"normalization: {action}"
+    elif change_type == "toxicity_removal":
+        category = change.get("category", "toxic content")
+        return f"toxicity_removal: {category} removed"
+    elif change_type == "html_escape":
+        return "html_escape: special characters escaped"
+    elif change_type == "masking":
+        return f"masking: sensitive content masked"
+    else:
+        return f"{change_type}: content modified"
+
+
+# ---------------------------------------------------------------------
 # Dependencies
 # ---------------------------------------------------------------------
 
@@ -119,11 +154,23 @@ async def get_metrics(
     if hasattr(request.app.state, "request_tracker"):
         request_metrics = request.app.state.request_tracker.get_metrics()
     
+    # Get pipeline metrics
+    pipeline_metrics = pipeline.get_metrics()
+    
     return MetricsResponse(
-        requests=request_metrics,
-        classification={},  # TODO: Add classifier metrics
-        sanitization={},    # TODO: Add sanitizer metrics
-        cache={},           # TODO: Add cache metrics
+        requests={**request_metrics, **pipeline_metrics},
+        classification={
+            "total_classified": pipeline_metrics.get("total_requests", 0),
+            "blocked": pipeline_metrics.get("blocked_requests", 0),
+            "block_rate": pipeline_metrics.get("block_rate", 0),
+        },
+        sanitization={
+            "sanitized_requests": pipeline_metrics.get("sanitized_requests", 0),
+        },
+        cache={
+            "cache_hits": pipeline_metrics.get("cache_hits", 0),
+            "cache_hit_rate": pipeline_metrics.get("cache_hit_rate", 0),
+        },
     )
 
 
@@ -286,14 +333,16 @@ async def classify_text(
     Useful for testing and pre-screening content.
     """
     try:
-        classification = pipeline.classifier.classify(request_body.text)
+        classification = await pipeline.classifier.classify_input(request_body.text)
+        
+        threats = [r.threat_type for r in classification.get_threats()]
         
         return ClassifyResponse(
             text_preview=request_body.text[:100] + "..." if len(request_body.text) > 100 else request_body.text,
-            threats=classification.threats,
-            severity=SeverityLevel(classification.severity),
-            confidence=classification.confidence,
-            details=classification.details,
+            threats=threats,
+            severity=SeverityLevel(SecurityPipeline._map_severity(classification.max_severity).value),
+            confidence=classification.aggregated_score,
+            details=classification.to_dict(),
         )
         
     except Exception as e:
@@ -321,14 +370,16 @@ async def classify_output(
     for PII leakage, credential exposure, etc.
     """
     try:
-        classification = pipeline.classifier.classify(request_body.text)
+        classification = await pipeline.classifier.classify_output(request_body.text)
+        
+        threats = [r.threat_type for r in classification.get_threats()]
         
         return ClassifyResponse(
             text_preview=request_body.text[:100] + "..." if len(request_body.text) > 100 else request_body.text,
-            threats=classification.threats,
-            severity=SeverityLevel(classification.severity),
-            confidence=classification.confidence,
-            details=classification.details,
+            threats=threats,
+            severity=SeverityLevel(SecurityPipeline._map_severity(classification.max_severity).value),
+            confidence=classification.aggregated_score,
+            details=classification.to_dict(),
         )
         
     except Exception as e:
@@ -360,12 +411,14 @@ async def sanitize_input(
     from the input before processing.
     """
     try:
-        sanitized = pipeline.input_sanitizer.sanitize(request_body.text)
+        result = pipeline.input_sanitizer.sanitize(request_body.text)
         
         return SanitizeResponse(
             original=request_body.text,
-            sanitized=sanitized,
-            modifications=[],  # TODO: Track modifications
+            sanitized=result.sanitized_text,
+            modifications=[
+                _format_change(c) for c in result.changes
+            ] if result.changes else [],
         )
         
     except Exception as e:
@@ -393,12 +446,14 @@ async def sanitize_output(
     before returning to the user.
     """
     try:
-        sanitized = pipeline.output_sanitizer.sanitize(request_body.text)
+        result = pipeline.output_sanitizer.sanitize(request_body.text)
         
         return SanitizeResponse(
             original=request_body.text,
-            sanitized=sanitized,
-            modifications=[],  # TODO: Track modifications
+            sanitized=result.sanitized_text,
+            modifications=[
+                _format_change(c) for c in result.changes
+            ] if result.changes else [],
         )
         
     except Exception as e:
@@ -430,9 +485,10 @@ async def validate_text(
     without modifying the text.
     """
     try:
-        # Use validation engine if available
-        if hasattr(pipeline, 'validation_engine'):
-            result = await pipeline.validation_engine.validate(request_body.text)
+        # validation_engine is a property that returns None if unavailable
+        engine = pipeline.validation_engine
+        if engine is not None:
+            result = await engine.validate(request_body.text)
             
             return ValidateResponse(
                 is_valid=result.is_valid,
@@ -448,12 +504,10 @@ async def validate_text(
                 warning_count=result.warning_count,
             )
         else:
-            # Fallback to basic validation
-            return ValidateResponse(
-                is_valid=True,
-                violations=[],
-                error_count=0,
-                warning_count=0,
+            logger.warning("Validation engine not available")
+            raise HTTPException(
+                status_code=501,
+                detail="Validation engine not available in current configuration",
             )
         
     except Exception as e:

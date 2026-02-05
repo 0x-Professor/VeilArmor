@@ -638,6 +638,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "Referrer-Policy": "strict-origin-when-cross-origin",
         }
     
+    # Paths that serve browser UI and need relaxed CSP to load
+    # external JS/CSS (Swagger UI, ReDoc from cdn.jsdelivr.net).
+    _DOCS_PATHS = {"/docs", "/redoc", "/openapi.json"}
+
     async def dispatch(
         self,
         request: Request,
@@ -647,7 +651,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         
         for key, value in self.headers.items():
-            response.headers[key] = value
+            # Relax CSP for API docs pages so Swagger UI / ReDoc
+            # can load JS & CSS from the CDN.
+            if key == "Content-Security-Policy" and request.url.path in self._DOCS_PATHS:
+                response.headers[key] = (
+                    "default-src 'self'; "
+                    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                    "img-src 'self' data: https://fastapi.tiangolo.com; "
+                    "worker-src 'self' blob:"
+                )
+            else:
+                response.headers[key] = value
         
         return response
 
