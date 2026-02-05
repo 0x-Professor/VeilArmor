@@ -33,26 +33,56 @@ VeilArmor is a production-ready security framework for Large Language Models (LL
 
 ## Architecture
 
-```
-┌────────────────────────────────────────────────────────────────────┐
-│                      VeilArmor Security Pipeline                    │
-├────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   Request ──> [API Gateway] ──> [Security Pipeline] ──> Response   │
-│                    │                    │                           │
-│                    │         ┌──────────┴──────────┐                │
-│                    │         │                     │                │
-│               Rate Limit  ┌──┴──┐              ┌──┴──┐              │
-│               Auth        │Input│              │Output│             │
-│               Tracking    │     │              │      │             │
-│                           │  ▼  │              │  ▲   │             │
-│                        ┌──┴───┴──┐          ┌──┴──┴───┐             │
-│                        │Classify │          │Validate │             │
-│                        │Sanitize │──> LLM ──│Sanitize │             │
-│                        │Cache    │          │Classify │             │
-│                        └─────────┘          └─────────┘             │
-│                                                                     │
-└────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    User[User Request] --> APIGW[API Gateway]
+
+    APIGW --> InputLayer[Input Processing Layer]
+
+    subgraph "Input Processing"
+        InputLayer --> Validator[Validator]
+        Validator --> Preprocessor[Preprocessor]
+        Preprocessor --> Normalizer[Normalizer]
+    end
+
+    Normalizer --> ClassEngine[Classification Engine]
+
+    subgraph "Classification Engine"
+        ClassEngine --> ParallelCls[Parallel Classifiers]
+        ParallelCls --> DecisionEngine[Scoring & Decision Engine]
+        
+        DecisionEngine -->|BLOCK| Block[Block Request]
+        DecisionEngine -->|ALLOW| LLMRoute[Send to LLM Layer]
+        DecisionEngine -->|SANITIZE| SanitizeLayer
+    end
+
+    subgraph "Sanitization Layer"
+        SanitizeLayer[Pattern Removal, Context Injection, Escaping]
+    end
+
+    SanitizeLayer --> LLMRoute
+
+    subgraph "LLM Provider Layer"
+        LLMRoute --> OpenAI[OpenAI]
+        LLMRoute --> Gemini[Gemini]
+        LLMRoute --> CustomLLM[Custom LLM]
+    end
+
+    OpenAI --> OutputValidation
+    Gemini --> OutputValidation
+    CustomLLM --> OutputValidation
+
+    subgraph "Output Validation Layer"
+        OutputValidation[Content Safety, PII Detection, Injection Check]
+    end
+
+    OutputValidation --> OutputSanitization
+
+    subgraph "Output Sanitization Layer"
+        OutputSanitization[PII Redaction, Content Filtering, Formatting]
+    end
+
+    OutputSanitization --> Response[Final Response]
 ```
 
 ### Pipeline Stages
