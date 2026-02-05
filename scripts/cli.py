@@ -75,11 +75,19 @@ def cmd_serve(args):
 
 def cmd_classify(args):
     """Classify text for threats."""
-    from src.classifier import ThreatClassifier
+    from src.classifiers.manager import ClassifierManager
+    from src.classifiers.input import (
+        PromptInjectionClassifier,
+        JailbreakClassifier,
+        PIIDetectorClassifier,
+    )
     from src.core.config import get_settings
     
     settings = get_settings()
-    classifier = ThreatClassifier(settings)
+    manager = ClassifierManager(parallel_execution=False)
+    manager.register(PromptInjectionClassifier())
+    manager.register(JailbreakClassifier())
+    manager.register(PIIDetectorClassifier())
     
     # Get text from args or stdin
     if args.text:
@@ -90,40 +98,36 @@ def cmd_classify(args):
     else:
         text = sys.stdin.read()
     
-    result = classifier.classify(text)
+    result = asyncio.run(manager.classify_input(text))
     
     if args.json:
-        output = {
-            "threats": result.threats,
-            "severity": result.severity,
-            "confidence": result.confidence,
-            "details": result.details,
-        }
+        output = result.to_dict()
         print(json.dumps(output, indent=2))
     else:
         print(colored("\n=== Classification Result ===", "cyan"))
-        print(f"Severity: {colored(result.severity, 'yellow')}")
-        print(f"Confidence: {result.confidence:.2%}")
+        print(f"Aggregated Score: {colored(f'{result.aggregated_score:.2%}', 'yellow')}")
+        print(f"Max Severity: {result.max_severity:.2f}")
         
-        if result.threats:
+        threats = result.get_threats()
+        if threats:
             print(colored("\nThreats Detected:", "red"))
-            for threat in result.threats:
-                print(f"  - {threat}")
+            for threat in threats:
+                print(f"  - {threat.threat_type} (severity={threat.severity:.2f}, confidence={threat.confidence:.2f})")
         else:
             print(colored("\nNo threats detected", "green"))
 
 
 def cmd_sanitize(args):
     """Sanitize text."""
-    from src.sanitizer import InputSanitizer, OutputSanitizer
+    from src.sanitization import InputSanitizer, OutputSanitizer
     from src.core.config import get_settings
     
     settings = get_settings()
     
     if args.output:
-        sanitizer = OutputSanitizer(settings)
+        sanitizer = OutputSanitizer()
     else:
-        sanitizer = InputSanitizer(settings)
+        sanitizer = InputSanitizer()
     
     # Get text
     if args.text:
@@ -134,16 +138,18 @@ def cmd_sanitize(args):
     else:
         text = sys.stdin.read()
     
-    sanitized = sanitizer.sanitize(text)
+    result = sanitizer.sanitize(text)
     
     if args.json:
         print(json.dumps({
             "original": text,
-            "sanitized": sanitized,
+            "sanitized": result.sanitized_text,
+            "was_modified": result.was_modified,
+            "strategies_applied": result.strategies_applied,
         }, indent=2))
     else:
         print(colored("\n=== Sanitized Output ===", "cyan"))
-        print(sanitized)
+        print(result.sanitized_text)
 
 
 def cmd_process(args):
