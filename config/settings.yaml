@@ -1,31 +1,351 @@
-# VeilArmor Configuration
-app:
-  name: "VeilArmor"
-  version: "1.0.0"
-  debug: true
+# =============================================================================
+# VeilArmor v2.0 - Main Configuration
+# =============================================================================
+# This is the main configuration file for VeilArmor.
+# Environment variables can override these settings using VEILARMOR_ prefix.
+# =============================================================================
 
+# Application Settings
+app_name: "VeilArmor"
+version: "2.0.0"
+environment: "development"  # development, staging, production, testing
+debug: true
+
+# -----------------------------------------------------------------------------
+# Server Configuration
+# -----------------------------------------------------------------------------
 server:
   host: "0.0.0.0"
   port: 8000
-
-security:
-  # Severity thresholds
-  block_severity: ["CRITICAL", "HIGH"]
-  sanitize_severity: ["MEDIUM", "LOW"]
+  workers: 4
   
-  # Classifier settings
-  classifier:
-    confidence_threshold: 0.7
+  # CORS Settings
+  cors_enabled: true
+  cors_origins:
+    - "*"
+  cors_methods:
+    - "*"
+  cors_headers:
+    - "*"
   
-  # Sanitizer settings
-  sanitizer:
-    redact_pii: true
-    redact_placeholder: "[REDACTED]"
+  # Request Handling
+  max_request_size_mb: 10
+  request_timeout_seconds: 60.0
 
+# -----------------------------------------------------------------------------
+# Classifier Configuration
+# -----------------------------------------------------------------------------
+classifiers:
+  # Parallel execution settings
+  parallel_execution: true
+  max_concurrent: 10
+  fail_fast: false
+  
+  # Input Classifiers
+  prompt_injection:
+    name: "prompt_injection"
+    enabled: true
+    weight: 2.0
+    threshold: 0.5
+    timeout_seconds: 5.0
+    options: {}
+  
+  jailbreak:
+    name: "jailbreak"
+    enabled: true
+    weight: 2.0
+    threshold: 0.5
+    timeout_seconds: 5.0
+    options: {}
+  
+  pii_detector:
+    name: "pii_detector"
+    enabled: true
+    weight: 1.5
+    threshold: 0.5
+    timeout_seconds: 5.0
+    options: {}
+  
+  sensitive_content:
+    name: "sensitive_content"
+    enabled: true
+    weight: 1.0
+    threshold: 0.4
+    timeout_seconds: 5.0
+    options: {}
+  
+  system_prompt_leak:
+    name: "system_prompt_leak"
+    enabled: true
+    weight: 2.0
+    threshold: 0.5
+    timeout_seconds: 5.0
+    options: {}
+  
+  adversarial_attack:
+    name: "adversarial_attack"
+    enabled: true
+    weight: 1.5
+    threshold: 0.5
+    timeout_seconds: 5.0
+    options: {}
+  
+  toxicity:
+    name: "toxicity"
+    enabled: true
+    weight: 1.0
+    threshold: 0.5
+    timeout_seconds: 5.0
+    options: {}
+  
+  # Output Classifiers
+  content_safety:
+    name: "content_safety"
+    enabled: true
+    weight: 1.5
+    threshold: 0.5
+    timeout_seconds: 5.0
+    options: {}
+  
+  pii_leakage:
+    name: "pii_leakage"
+    enabled: true
+    weight: 1.5
+    threshold: 0.5
+    timeout_seconds: 5.0
+    options: {}
+  
+  injection_check:
+    name: "injection_check"
+    enabled: true
+    weight: 1.0
+    threshold: 0.5
+    timeout_seconds: 5.0
+    options: {}
+  
+  hallucination:
+    name: "hallucination"
+    enabled: false
+    weight: 1.0
+    threshold: 0.7
+    timeout_seconds: 10.0
+    options: {}
+  
+  bias_detector:
+    name: "bias_detector"
+    enabled: false
+    weight: 0.8
+    threshold: 0.6
+    timeout_seconds: 5.0
+    options: {}
+
+# -----------------------------------------------------------------------------
+# LLM Provider Configuration
+# -----------------------------------------------------------------------------
 llm:
-  provider: "dummy"  # Options: dummy, openai, gemini
-  timeout: 30
+  default_provider: "openai"
+  enable_failover: true
+  failover_retries: 2
+  track_costs: true
+  max_cost_per_request: null
+  
+  providers:
+    openai:
+      name: "openai"
+      enabled: true
+      model: "gpt-3.5-turbo"
+      api_key_env: "OPENAI_API_KEY"
+      api_base: null
+      timeout_seconds: 30.0
+      max_retries: 3
+      priority: 1
+      options: {}
+    
+    anthropic:
+      name: "anthropic"
+      enabled: false
+      model: "claude-3-sonnet-20240229"
+      api_key_env: "ANTHROPIC_API_KEY"
+      api_base: null
+      timeout_seconds: 30.0
+      max_retries: 3
+      priority: 2
+      options: {}
+    
+    gemini:
+      name: "gemini"
+      enabled: false
+      model: "gemini-pro"
+      api_key_env: "GOOGLE_API_KEY"
+      api_base: null
+      timeout_seconds: 30.0
+      max_retries: 3
+      priority: 3
+      options: {}
 
+# -----------------------------------------------------------------------------
+# Cache Configuration
+# -----------------------------------------------------------------------------
+cache:
+  enabled: true
+  backend: "memory"  # memory, redis, disk
+  
+  # Redis settings (when backend is redis)
+  redis_url: "redis://localhost:6379/0"
+  redis_password_env: "REDIS_PASSWORD"
+  
+  # Memory cache settings
+  memory_max_size: 10000
+  
+  # Disk cache settings
+  disk_path: ".cache/veilarmor"
+  disk_max_size_mb: 1000
+  
+  # TTL settings
+  exact_match_ttl_seconds: 3600
+  semantic_cache_ttl_seconds: 1800
+  
+  # Semantic cache settings
+  semantic_enabled: true
+  semantic_similarity_threshold: 0.95
+  embedding_model: "all-MiniLM-L6-v2"
+
+# -----------------------------------------------------------------------------
+# Threshold Configuration
+# -----------------------------------------------------------------------------
+thresholds:
+  # Main decision thresholds
+  block_threshold: 0.7
+  sanitize_threshold: 0.3
+  
+  # Per-threat type thresholds
+  threat_thresholds:
+    PROMPT_INJECTION: 0.6
+    JAILBREAK: 0.6
+    PII_EXPOSURE: 0.5
+    SENSITIVE_CONTENT: 0.4
+    SYSTEM_PROMPT_LEAK: 0.5
+    ADVERSARIAL_ATTACK: 0.6
+    TOXICITY: 0.5
+    CONTENT_SAFETY: 0.5
+    PII_LEAKAGE: 0.5
+    INJECTION_OUTPUT: 0.5
+    HALLUCINATION: 0.7
+    BIAS: 0.6
+
+# -----------------------------------------------------------------------------
+# Sanitization Configuration
+# -----------------------------------------------------------------------------
+sanitization:
+  # Score-based strategy selection
+  low_score_threshold: 0.3
+  medium_score_threshold: 0.6
+  
+  # Strategies
+  strategies:
+    pattern_removal:
+      enabled: true
+      priority: 1
+      options: {}
+    context_injection:
+      enabled: true
+      priority: 2
+      options: {}
+    redaction:
+      enabled: true
+      priority: 3
+      options: {}
+    escaping:
+      enabled: true
+      priority: 4
+      options: {}
+    token_filtering:
+      enabled: false
+      priority: 5
+      options: {}
+    rewriting:
+      enabled: false
+      priority: 6
+      options: {}
+  
+  # PII redaction settings
+  pii_placeholder: "[REDACTED]"
+  preserve_format: true
+  
+  # Context injection settings
+  safety_context: "Please provide a helpful and safe response."
+
+# -----------------------------------------------------------------------------
+# Logging Configuration
+# -----------------------------------------------------------------------------
 logging:
   level: "INFO"
-  format: "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+  format: "console"  # console, json, text
+  enable_colors: true
+  
+  # File logging
+  log_file: null
+  json_log_file: null
+  log_dir: "logs"
+  max_file_size_mb: 100
+  backup_count: 5
+  
+  # Component-specific levels
+  component_levels: {}
+  
+  # Sensitive data handling
+  mask_sensitive_data: true
+  truncate_long_values: true
+  max_value_length: 500
+
+# -----------------------------------------------------------------------------
+# Rate Limiting Configuration
+# -----------------------------------------------------------------------------
+rate_limit:
+  enabled: true
+  
+  # Global limits
+  global_requests_per_minute: 1000
+  global_requests_per_hour: 10000
+  
+  # Per-user limits
+  user_requests_per_minute: 60
+  user_requests_per_hour: 500
+  
+  # Per-IP limits
+  ip_requests_per_minute: 100
+
+# -----------------------------------------------------------------------------
+# Authentication Configuration
+# -----------------------------------------------------------------------------
+auth:
+  enabled: false
+  
+  # API key auth
+  api_key_header: "X-API-Key"
+  api_keys_env: "VEILARMOR_API_KEYS"
+  
+  # JWT auth
+  jwt_enabled: false
+  jwt_secret_env: "VEILARMOR_JWT_SECRET"
+  jwt_algorithm: "HS256"
+  jwt_expiry_hours: 24
+
+# -----------------------------------------------------------------------------
+# Conversation Management Configuration
+# -----------------------------------------------------------------------------
+conversation:
+  enabled: true
+  
+  # Storage
+  storage_backend: "memory"  # memory, redis, disk
+  max_conversations: 10000
+  
+  # Context management
+  max_context_turns: 20
+  max_context_tokens: 4000
+  summarize_on_overflow: true
+  
+  # Retention
+  conversation_ttl_hours: 24
+  auto_archive: true
