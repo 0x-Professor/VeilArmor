@@ -178,4 +178,10 @@ def get_logger(name: str) -> StructuredLogger:
     Returns:
         StructuredLogger instance with keyword argument support
     """
-    return logging.getLogger(name)
+    # Ensure our custom logger class is set (structlog may override it)
+    logging.setLoggerClass(StructuredLogger)
+    logger = logging.getLogger(name)
+    # Patch existing loggers that were created before setLoggerClass
+    if not isinstance(logger, StructuredLogger):
+        logger.__class__ = StructuredLogger
+    return logger
