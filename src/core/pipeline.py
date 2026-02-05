@@ -12,9 +12,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from src.classifier import ThreatClassifier, ClassificationResult
-from src.sanitizer import InputSanitizer, OutputSanitizer
-from src.llm import LLMGateway, get_llm_gateway
+from src.classifiers import ClassifierManager, ClassificationResult
+from src.classifiers.manager import AggregatedResults
+from src.sanitization import InputSanitizer, OutputSanitizer
+from src.llm import LLMGateway, LLMRequest, LLMResponse, Message, get_llm_gateway
 from src.core.config import Settings, get_settings
 from src.utils.logger import get_logger
 
@@ -80,8 +81,8 @@ class PipelineContext:
     sanitized_prompt: Optional[str] = None
     llm_response: Optional[str] = None
     final_response: Optional[str] = None
-    classification: Optional[ClassificationResult] = None
-    output_classification: Optional[ClassificationResult] = None
+    classification: Optional[AggregatedResults] = None
+    output_classification: Optional[AggregatedResults] = None
     action: Action = Action.ALLOW
     severity: Severity = Severity.NONE
     threats_detected: List[str] = field(default_factory=list)
@@ -243,9 +244,9 @@ class SecurityPipeline:
         self.config = config or PipelineConfig()
         
         # Initialize components
-        self.classifier = ThreatClassifier(self.settings)
-        self.input_sanitizer = InputSanitizer(self.settings)
-        self.output_sanitizer = OutputSanitizer(self.settings)
+        self.classifier = ClassifierManager()
+        self.input_sanitizer = InputSanitizer()
+        self.output_sanitizer = OutputSanitizer()
         self.llm_gateway = get_llm_gateway(self.settings)
         
         # Optional components (lazy loaded)
@@ -484,9 +485,14 @@ class SecurityPipeline:
         start = time.time()
         
         try:
-            ctx.classification = self.classifier.classify(ctx.processed_prompt or ctx.original_prompt)
-            ctx.threats_detected = ctx.classification.threats
-            ctx.severity = Severity(ctx.classification.severity)
+            ctx.classification = await self.classifier.classify_input(
+                ctx.processed_prompt or ctx.original_prompt
+            )
+            # Extract threat types from results that are actual threats
+            ctx.threats_detected = [
+                r.threat_type for r in ctx.classification.get_threats()
+            ]
+            ctx.severity = self._map_severity(ctx.classification.max_severity)
             
             ctx.stage_results.append(StageResult(
                 stage=PipelineStage.INPUT_CLASSIFICATION,
@@ -495,12 +501,13 @@ class SecurityPipeline:
                 data={
                     "threats": ctx.threats_detected,
                     "severity": ctx.severity.value,
-                    "confidence": ctx.classification.confidence,
+                    "aggregated_score": ctx.classification.aggregated_score,
                 },
             ))
             
             logger.debug(
-                f"Classification complete for {ctx.request_id}: threats={ctx.threats_detected}, severity={ctx.severity.value}"
+                f"Classification complete for {ctx.request_id}: "
+                f"threats={ctx.threats_detected}, severity={ctx.severity.value}"
             )
             
         except Exception as e:
@@ -543,14 +550,19 @@ class SecurityPipeline:
         start = time.time()
         
         try:
-            ctx.sanitized_prompt = self.input_sanitizer.sanitize(
+            result = self.input_sanitizer.sanitize(
                 ctx.processed_prompt or ctx.original_prompt
             )
+            ctx.sanitized_prompt = result.sanitized_text
             
             ctx.stage_results.append(StageResult(
                 stage=PipelineStage.INPUT_SANITIZATION,
                 success=True,
                 duration_ms=(time.time() - start) * 1000,
+                data={
+                    "was_modified": result.was_modified,
+                    "strategies_applied": result.strategies_applied,
+                },
             ))
             
         except Exception as e:
@@ -615,12 +627,21 @@ class SecurityPipeline:
         
         try:
             prompt = ctx.sanitized_prompt or ctx.processed_prompt or ctx.original_prompt
-            ctx.llm_response = await self.llm_gateway.generate(prompt)
+            llm_request = LLMRequest(
+                messages=[Message(role="user", content=prompt)],
+            )
+            response = await self.llm_gateway.generate(llm_request)
+            ctx.llm_response = response.content
             
             ctx.stage_results.append(StageResult(
                 stage=PipelineStage.LLM_CALL,
                 success=True,
                 duration_ms=(time.time() - start) * 1000,
+                data={
+                    "model": response.model,
+                    "provider": response.provider,
+                    "total_tokens": response.total_tokens,
+                },
             ))
             
         except Exception as e:
@@ -639,15 +660,21 @@ class SecurityPipeline:
         
         try:
             if ctx.llm_response:
-                ctx.output_classification = self.classifier.classify(ctx.llm_response)
+                ctx.output_classification = await self.classifier.classify_output(
+                    ctx.llm_response
+                )
+                
+                output_threats = [
+                    r.threat_type for r in ctx.output_classification.get_threats()
+                ]
                 
                 ctx.stage_results.append(StageResult(
                     stage=PipelineStage.OUTPUT_CLASSIFICATION,
                     success=True,
                     duration_ms=(time.time() - start) * 1000,
                     data={
-                        "threats": ctx.output_classification.threats,
-                        "severity": ctx.output_classification.severity,
+                        "threats": output_threats,
+                        "max_severity": ctx.output_classification.max_severity,
                     },
                 ))
             
@@ -691,7 +718,8 @@ class SecurityPipeline:
         
         try:
             if ctx.llm_response:
-                ctx.final_response = self.output_sanitizer.sanitize(ctx.llm_response)
+                result = self.output_sanitizer.sanitize(ctx.llm_response)
+                ctx.final_response = result.sanitized_text
             else:
                 ctx.final_response = None
             
@@ -723,23 +751,36 @@ class SecurityPipeline:
     # Decision Making
     # -----------------------------------------------------------------
     
-    def _decide_action(self, classification: Optional[ClassificationResult]) -> Action:
+    @staticmethod
+    def _map_severity(score: float) -> Severity:
+        """Map a numeric severity score (0.0-1.0) to a Severity enum."""
+        if score >= 0.8:
+            return Severity.CRITICAL
+        elif score >= 0.6:
+            return Severity.HIGH
+        elif score >= 0.4:
+            return Severity.MEDIUM
+        elif score >= 0.2:
+            return Severity.LOW
+        return Severity.NONE
+
+    def _decide_action(self, classification: Optional[AggregatedResults]) -> Action:
         """Decide what action to take based on classification."""
         if classification is None:
             return Action.ALLOW
         
-        severity = classification.severity
+        severity = self._map_severity(classification.max_severity)
         
         # Check if should block
-        if severity in self.settings.security.block_severity:
+        if severity.value in self.settings.security.block_severity:
             return Action.BLOCK
         
         # Check if should sanitize
-        if severity in self.settings.security.sanitize_severity:
+        if severity.value in self.settings.security.sanitize_severity:
             return Action.SANITIZE
         
-        # Check if has threats with low confidence
-        if classification.threats and classification.confidence < self.settings.security.classifier.confidence_threshold:
+        # Any detected threats with moderate score -> sanitize
+        if classification.threat_count > 0 and classification.aggregated_score >= 0.3:
             return Action.SANITIZE
         
         return Action.ALLOW
