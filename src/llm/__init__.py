@@ -1,6 +1,62 @@
-"""LLM module - LLM gateway and providers"""
+"""
+VeilArmor v2.0 - LLM Module
 
-from .gateway import LLMGateway, get_llm_gateway
-from .dummy_llm import DummyLLM
+LLM provider abstraction with multi-provider support via LiteLLM.
+"""
 
-__all__ = ["LLMGateway", "get_llm_gateway", "DummyLLM"]
+from src.llm.base import (
+    BaseLLM,
+    LLMProvider,
+    LLMRequest,
+    LLMResponse,
+    Message,
+    StreamChunk,
+)
+from src.llm.providers import (
+    LiteLLMProvider,
+    OpenAIProvider,
+    AnthropicProvider,
+    GoogleProvider,
+    AzureOpenAIProvider,
+    OllamaProvider,
+)
+from src.llm.dummy_llm import (
+    DummyLLM,
+    EchoDummyLLM,
+    TemplatedDummyLLM,
+    StatefulDummyLLM,
+)
+from src.llm.gateway import (
+    LLMGateway,
+    LoadBalanceStrategy,
+    ProviderConfig,
+    get_llm_gateway,
+)
+
+
+__all__ = [
+    # Base classes
+    "BaseLLM",
+    "LLMProvider",
+    "LLMRequest",
+    "LLMResponse",
+    "Message",
+    "StreamChunk",
+    # Providers
+    "LiteLLMProvider",
+    "OpenAIProvider",
+    "AnthropicProvider",
+    "GoogleProvider",
+    "AzureOpenAIProvider",
+    "OllamaProvider",
+    # Dummy providers
+    "DummyLLM",
+    "EchoDummyLLM",
+    "TemplatedDummyLLM",
+    "StatefulDummyLLM",
+    # Gateway
+    "LLMGateway",
+    "LoadBalanceStrategy",
+    "ProviderConfig",
+    "get_llm_gateway",
+]
