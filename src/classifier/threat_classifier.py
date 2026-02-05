@@ -1,11 +1,10 @@
 """Main threat classifier implementation"""
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from collections import defaultdict
 
 from .base import BaseClassifier, ClassificationResult
 from .patterns import ThreatPatterns, PatternRule, ThreatType
-from src.core.config import Settings
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -20,7 +19,8 @@ class ThreatClassifier(BaseClassifier):
     # Severity hierarchy for determining final severity
     SEVERITY_ORDER = ["NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"]
     
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Any = None):
+        """Initialize classifier with optional settings."""
         self.settings = settings
         self.patterns = ThreatPatterns()
         logger.info(f"ThreatClassifier initialized with {len(self.patterns.get_rules())} rules")

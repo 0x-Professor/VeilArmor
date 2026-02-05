@@ -1,6 +1,18 @@
-"""Classifier module - Threat detection"""
+"""
+VeilArmor v2.0 - Classifier Module
 
-from .threat_classifier import ThreatClassifier, ClassificationResult
-from .patterns import ThreatPatterns
+Threat detection and classification.
+"""
 
-__all__ = ["ThreatClassifier", "ClassificationResult", "ThreatPatterns"]
+from .base import BaseClassifier, ClassificationResult
+from .patterns import ThreatPatterns, ThreatType, PatternRule
+from .threat_classifier import ThreatClassifier
+
+__all__ = [
+    "BaseClassifier",
+    "ClassificationResult",
+    "ThreatClassifier",
+    "ThreatPatterns",
+    "ThreatType",
+    "PatternRule",
+]
