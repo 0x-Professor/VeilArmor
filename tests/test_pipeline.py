@@ -54,6 +54,7 @@ class TestSecurityPipeline:
         assert pipeline.classifier is not None
         assert pipeline.input_sanitizer is not None
         assert pipeline.output_sanitizer is not None
+        assert pipeline.llm_gateway is not None
     
     @pytest.mark.asyncio
     async def test_process_clean_input(self, pipeline):
