@@ -10,7 +10,7 @@ Usage:
     python main.py                    # Run with default settings
     python main.py --host 0.0.0.0     # Custom host
     python main.py --port 8080        # Custom port
-    python main.py --workers 4        # Multiple workers
+    # python main.py --workers 4        # Multiple workers
     python main.py --dev              # Development mode
 """
 
@@ -53,12 +53,12 @@ Examples:
         help="Port to listen on (default: from config or 8000)",
     )
     
-    parser.add_argument(
-        "--workers", "-w",
-        type=int,
-        default=None,
-        help="Number of worker processes (default: 1)",
-    )
+    #parser.add_argument(
+     #   "--workers", "-w",
+     #   type=int,
+     #  default=None,
+     #   help="Number of worker processes (default: 1)",
+    #)
     
     parser.add_argument(
         "--dev",
@@ -125,7 +125,7 @@ def run_server(
     settings: Settings,
     host: Optional[str] = None,
     port: Optional[int] = None,
-    workers: Optional[int] = None,
+    # workers: Optional[int] = None,
     dev_mode: bool = False,
     debug: bool = False,
 ):
@@ -134,7 +134,7 @@ def run_server(
     # Determine settings
     final_host = host or getattr(settings.server, 'host', '0.0.0.0')
     final_port = port or getattr(settings.server, 'port', 8000)
-    final_workers = workers or 1
+    # final_workers = workers or 1
     reload = dev_mode or settings.app.debug
     log_level = "debug" if debug else settings.logging.level.lower()
     
@@ -145,7 +145,7 @@ def run_server(
     logger = get_logger("veilarmor.main")
     logger.info(
         f"Starting VeilArmor server on {final_host}:{final_port} "
-        f"with {final_workers} worker(s), reload={reload}"
+        f", reload={reload}"
     )
     
     # Uvicorn configuration
@@ -161,9 +161,9 @@ def run_server(
         # Development mode - single process with reload
         uvicorn_config["reload"] = True
         uvicorn_config["reload_dirs"] = ["src"]
-    elif final_workers > 1:
-        # Production mode with multiple workers
-        uvicorn_config["workers"] = final_workers
+    # elif final_workers > 1:
+    #     # Production mode with multiple workers
+    #     uvicorn_config["workers"] = final_workers
     
     # Run server
     try:
@@ -208,7 +208,7 @@ def main():
         settings=settings,
         host=args.host,
         port=args.port,
-        workers=args.workers,
+        # workers=args.workers,
         dev_mode=args.dev,
         debug=args.debug,
     )
