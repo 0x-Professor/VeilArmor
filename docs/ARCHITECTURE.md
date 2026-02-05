@@ -87,9 +87,9 @@ STAGES = [
 ]
 ```
 
-### 3. Threat Classifier (`src/classifier/`)
+### 3. Classification Engine (`src/classifiers/`)
 
-Multi-layered threat detection:
+Multi-layered threat detection with parallel execution:
 
 - **Pattern Matching**: Regex-based detection for known attacks
 - **ML Classification**: Statistical models for nuanced detection
@@ -101,7 +101,7 @@ Multi-layered threat detection:
   - Harmful Content
   - Sensitive Data
 
-### 4. Sanitizer (`src/sanitizer/`)
+### 4. Sanitization (`src/sanitization/`)
 
 Input and output cleaning:
 
@@ -204,11 +204,15 @@ JWT_SECRET=your-jwt-secret
 
 ```python
 config = PipelineConfig(
-    stages=[...],                  # Which stages to run
-    block_threshold=Severity.HIGH, # When to block
-    sanitize_threshold=Severity.MEDIUM,
-    fail_open=False,               # Block on errors
-    collect_metrics=True,
+    enable_input_processing=True,       # Run input validation/normalization
+    enable_input_classification=True,   # Run threat classifiers
+    enable_input_sanitization=True,     # Sanitize input if needed
+    enable_cache=True,                  # Use semantic cache
+    enable_output_classification=True,  # Check LLM output
+    enable_output_validation=True,      # Validate output quality
+    enable_output_sanitization=True,    # Clean output PII/creds
+    fail_open=False,                    # Block on errors
+    timeout_seconds=30.0,               # Pipeline timeout
 )
 ```
 
