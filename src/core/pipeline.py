@@ -14,6 +14,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from src.classifiers import ClassifierManager, ClassificationResult
 from src.classifiers.manager import AggregatedResults
+from src.classifiers.base import get_classifier_class, list_registered_classifiers, ClassifierType
 from src.sanitization import InputSanitizer, OutputSanitizer
 from src.llm import LLMGateway, LLMRequest, LLMResponse, Message, get_llm_gateway
 from src.core.config import Settings, get_settings
@@ -245,6 +246,7 @@ class SecurityPipeline:
         
         # Initialize components
         self.classifier = ClassifierManager()
+        self._load_classifiers()  # Register all available classifiers
         self.input_sanitizer = InputSanitizer()
         self.output_sanitizer = OutputSanitizer()
         self.llm_gateway = get_llm_gateway(self.settings)
@@ -267,6 +269,49 @@ class SecurityPipeline:
         
         logger.info(
             f"Security pipeline initialized (cache={self.config.enable_cache})"
+        )
+    
+    def _load_classifiers(self) -> None:
+        """
+        Load and register all classifiers from the registry.
+        
+        Uses the @register_classifier decorator registry to discover
+        available classifier classes, then instantiates and registers
+        them with the ClassifierManager using config from settings.
+        """
+        # Get per-classifier config from settings if available
+        classifier_config = getattr(self.settings.security, 'classifier', None)
+        enabled_list = getattr(classifier_config, 'enabled_classifiers', None) if classifier_config else None
+        
+        registered_names = list_registered_classifiers()
+        loaded_count = 0
+        
+        for name in registered_names:
+            cls = get_classifier_class(name)
+            if cls is None:
+                continue
+            
+            # Determine if this classifier should be enabled
+            enabled = True
+            if enabled_list is not None:
+                # Map config names to registry names (e.g. "pii" -> "pii_detector")
+                enabled = name in enabled_list or any(
+                    name.startswith(e) for e in enabled_list
+                )
+            
+            try:
+                instance = cls(enabled=enabled)
+                self.classifier.register(instance)
+                loaded_count += 1
+            except Exception as e:
+                logger.warning(
+                    f"Failed to load classifier '{name}': {e}"
+                )
+        
+        logger.info(
+            f"Loaded {loaded_count} classifiers from registry "
+            f"({len(self.classifier.get_input_classifiers())} input, "
+            f"{len(self.classifier.get_output_classifiers())} output)"
         )
     
     # -----------------------------------------------------------------
@@ -460,8 +505,8 @@ class SecurityPipeline:
         
         try:
             if self.input_processor:
-                result = await self.input_processor.process(ctx.original_prompt)
-                ctx.processed_prompt = result.normalized if hasattr(result, 'normalized') else result
+                result = self.input_processor.process(ctx.original_prompt)
+                ctx.processed_prompt = result.processed_text if result.success else ctx.original_prompt
             else:
                 ctx.processed_prompt = ctx.original_prompt
             
@@ -586,8 +631,8 @@ class SecurityPipeline:
             result = await self.semantic_cache.get(prompt)
             
             if result and result.hit:
-                ctx.llm_response = result.value
-                ctx.final_response = result.value
+                ctx.llm_response = result.response
+                ctx.final_response = result.response
                 ctx.cache_hit = True
                 
                 ctx.stage_results.append(StageResult(
@@ -668,6 +713,19 @@ class SecurityPipeline:
                     r.threat_type for r in ctx.output_classification.get_threats()
                 ]
                 
+                # Merge output threats into the context so they appear in the result
+                if output_threats:
+                    ctx.threats_detected.extend(output_threats)
+                    output_severity = self._map_severity(
+                        ctx.output_classification.max_severity
+                    )
+                    # Escalate severity if output is worse than input
+                    if output_severity.value > ctx.severity.value:
+                        ctx.severity = output_severity
+                    logger.warning(
+                        f"Output threats detected for {ctx.request_id}: {output_threats}"
+                    )
+                
                 ctx.stage_results.append(StageResult(
                     stage=PipelineStage.OUTPUT_CLASSIFICATION,
                     success=True,
@@ -694,9 +752,21 @@ class SecurityPipeline:
             if self.validation_engine and ctx.llm_response:
                 result = await self.validation_engine.validate(ctx.llm_response)
                 
+                # Enforce validation: if invalid, flag the response
+                if not result.is_valid:
+                    logger.warning(
+                        f"Output validation failed for {ctx.request_id}: "
+                        f"{len(result.violations)} violations"
+                    )
+                    ctx.metadata["validation_failed"] = True
+                    ctx.metadata["validation_violations"] = [
+                        {"rule": v.rule_name, "message": v.message}
+                        for v in result.violations
+                    ]
+                
                 ctx.stage_results.append(StageResult(
                     stage=PipelineStage.OUTPUT_VALIDATION,
-                    success=True,
+                    success=result.is_valid,
                     duration_ms=(time.time() - start) * 1000,
                     data={
                         "is_valid": result.is_valid,
