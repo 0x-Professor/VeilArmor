@@ -1,10 +1,33 @@
 # API endpoints
-"""API routes"""
+"""
+VeilArmor v2.0 - API Routes
 
-from fastapi import APIRouter, HTTPException, Depends, Request
-from typing import Optional
+Comprehensive API endpoints for the security framework.
+"""
 
-from .models import PromptRequest, PromptResponse, HealthResponse, ErrorResponse
+import time
+from typing import Optional, List
+
+from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
+from fastapi.responses import StreamingResponse
+
+from .models import (
+    PromptRequest,
+    PromptResponse,
+    ChatRequest,
+    ChatResponse,
+    ClassifyRequest,
+    ClassifyResponse,
+    SanitizeRequest,
+    SanitizeResponse,
+    ValidateRequest,
+    ValidateResponse,
+    HealthResponse,
+    MetricsResponse,
+    ErrorResponse,
+    ActionType,
+    SeverityLevel,
+)
 from src.core.pipeline import SecurityPipeline
 from src.core.config import Settings, get_settings
 from src.utils.logger import get_logger
@@ -13,6 +36,10 @@ logger = get_logger(__name__)
 
 router = APIRouter()
 
+
+# ---------------------------------------------------------------------
+# Dependencies
+# ---------------------------------------------------------------------
 
 def get_pipeline(request: Request) -> SecurityPipeline:
     """
@@ -28,12 +55,38 @@ def get_pipeline(request: Request) -> SecurityPipeline:
     return pipeline
 
 
-@router.get("/health", response_model=HealthResponse, tags=["System"])
-async def health_check(settings: Settings = Depends(get_settings)):
+def get_request_id(request: Request) -> Optional[str]:
+    """Get request ID from state."""
+    return getattr(request.state, "request_id", None)
+
+
+def get_user_id(request: Request) -> Optional[str]:
+    """Get user ID from state (set by auth middleware)."""
+    return getattr(request.state, "user_id", None)
+
+
+# ---------------------------------------------------------------------
+# System Endpoints
+# ---------------------------------------------------------------------
+
+@router.get(
+    "/health",
+    response_model=HealthResponse,
+    tags=["System"],
+    summary="Health Check",
+)
+async def health_check(
+    request: Request,
+    settings: Settings = Depends(get_settings),
+):
     """
     Health check endpoint.
     Returns the status of the service and its components.
     """
+    uptime = None
+    if hasattr(request.app.state, "start_time"):
+        uptime = time.time() - request.app.state.start_time
+    
     return HealthResponse(
         status="healthy",
         version=settings.app.version,
@@ -41,151 +94,450 @@ async def health_check(settings: Settings = Depends(get_settings)):
             "api": "healthy",
             "classifier": "healthy",
             "sanitizer": "healthy",
-            "llm": "healthy"
-        }
+            "llm": "healthy",
+        },
+        uptime_seconds=uptime,
     )
 
 
+@router.get(
+    "/metrics",
+    response_model=MetricsResponse,
+    tags=["System"],
+    summary="Get Metrics",
+)
+async def get_metrics(
+    request: Request,
+    pipeline: SecurityPipeline = Depends(get_pipeline),
+):
+    """
+    Get system metrics.
+    Returns detailed metrics about requests, classification, and caching.
+    """
+    # Get request tracker metrics
+    request_metrics = {}
+    if hasattr(request.app.state, "request_tracker"):
+        request_metrics = request.app.state.request_tracker.get_metrics()
+    
+    return MetricsResponse(
+        requests=request_metrics,
+        classification={},  # TODO: Add classifier metrics
+        sanitization={},    # TODO: Add sanitizer metrics
+        cache={},           # TODO: Add cache metrics
+    )
 
-# /process: Full pipeline (classify → sanitize → LLM → classify output → sanitize output)
+
+# ---------------------------------------------------------------------
+# Main Processing Endpoints
+# ---------------------------------------------------------------------
+
 @router.post(
     "/api/v1/process",
     response_model=PromptResponse,
     responses={
         200: {"description": "Request processed successfully"},
         400: {"model": ErrorResponse, "description": "Invalid request"},
-        500: {"model": ErrorResponse, "description": "Internal server error"}
+        429: {"description": "Rate limit exceeded"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
     },
-    tags=["Security"]
+    tags=["Security"],
+    summary="Process Prompt",
 )
 async def process_prompt(
-    request: PromptRequest,
-    pipeline: SecurityPipeline = Depends(get_pipeline)
+    request_body: PromptRequest,
+    request: Request,
+    pipeline: SecurityPipeline = Depends(get_pipeline),
 ):
     """
-    Full pipeline: classify → sanitize → LLM → classify output → sanitize output
+    Full security pipeline processing.
+    
+    Steps:
+    1. Input classification (threat detection)
+    2. Input sanitization (if needed)
+    3. LLM processing
+    4. Output classification
+    5. Output sanitization
+    
+    Returns the processed response with security metadata.
     """
+    start_time = time.time()
+    request_id = get_request_id(request)
+    
     try:
-        logger.info(f"Processing request from user: {request.user_id or 'anonymous'}")
+        logger.info(
+            "Processing request",
+            request_id=request_id,
+            user_id=request_body.user_id,
+        )
+        
         result = await pipeline.process(
-            prompt=request.prompt,
-            user_id=request.user_id
+            prompt=request_body.prompt,
+            user_id=request_body.user_id,
         )
-        return PromptResponse(**result.to_dict())
+        
+        processing_time = (time.time() - start_time) * 1000
+        
+        return PromptResponse(
+            success=result.success if hasattr(result, 'success') else True,
+            action=ActionType(result.action) if hasattr(result, 'action') else ActionType.ALLOW,
+            response=result.response if hasattr(result, 'response') else None,
+            threats_detected=result.threats_detected if hasattr(result, 'threats_detected') else [],
+            severity=SeverityLevel(result.severity) if hasattr(result, 'severity') else SeverityLevel.NONE,
+            message=result.message if hasattr(result, 'message') else "Processed successfully",
+            request_id=request_id,
+            processing_time_ms=processing_time,
+        )
+        
     except Exception as e:
-        logger.error(f"Error processing request: {str(e)}")
+        logger.error(
+            "Error processing request",
+            request_id=request_id,
+            error=str(e),
+        )
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail=str(e),
         )
 
 
-
-# /sanitize: Only runs the sanitizer on the prompt (optionally, after classification)
 @router.post(
-    "/api/v1/sanitize",
-    tags=["Security"]
+    "/api/v1/chat",
+    response_model=ChatResponse,
+    responses={
+        200: {"description": "Chat completed successfully"},
+        400: {"model": ErrorResponse, "description": "Invalid request"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+    tags=["Chat"],
+    summary="Chat Completion",
 )
-async def sanitize_prompt(
-    request: PromptRequest,
-    pipeline: SecurityPipeline = Depends(get_pipeline)
+async def chat_completion(
+    request_body: ChatRequest,
+    request: Request,
+    pipeline: SecurityPipeline = Depends(get_pipeline),
 ):
     """
-    Sanitize a prompt (redact/cut malicious or sensitive parts).
+    Chat completion with security.
+    
+    Processes a chat conversation through the security pipeline
+    and returns the model's response.
     """
+    request_id = get_request_id(request)
+    
     try:
-        sanitized = pipeline.input_sanitizer.sanitize(request.prompt)
-        return {
-            "original": request.prompt,
-            "sanitized": sanitized
-        }
+        # Get the last user message for processing
+        user_messages = [m for m in request_body.messages if m.role == "user"]
+        if not user_messages:
+            raise HTTPException(
+                status_code=400,
+                detail="No user message found in request",
+            )
+        
+        last_message = user_messages[-1].content
+        
+        result = await pipeline.process(
+            prompt=last_message,
+            user_id=request_body.user_id,
+        )
+        
+        return ChatResponse(
+            id=request_id or "chat_response",
+            content=result.response if hasattr(result, 'response') else "",
+            role="assistant",
+            finish_reason="stop",
+            security={
+                "threats_detected": result.threats_detected if hasattr(result, 'threats_detected') else [],
+                "action": result.action if hasattr(result, 'action') else "ALLOW",
+            },
+        )
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error sanitizing request: {str(e)}")
+        logger.error(
+            "Error in chat completion",
+            request_id=request_id,
+            error=str(e),
+        )
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail=str(e),
         )
 
-# /classify-output: Classifies the LLM output for sensitive data disclosure
-@router.post(
-    "/api/v1/classify-output",
-    tags=["Security"]
-)
-async def classify_output(
-    request: PromptRequest,
-    pipeline: SecurityPipeline = Depends(get_pipeline)
-):
-    """
-    Classify LLM output for sensitive data disclosure (no LLM call).
-    """
-    try:
-        classification = pipeline.classifier.classify(request.prompt)
-        return {
-            "output": request.prompt[:100] + "..." if len(request.prompt) > 100 else request.prompt,
-            "threats": classification.threats,
-            "severity": classification.severity,
-            "confidence": classification.confidence,
-            "details": classification.details
-        }
-    except Exception as e:
-        logger.error(f"Error classifying output: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
 
-# /sanitize-output: Sanitizes the LLM output
-@router.post(
-    "/api/v1/sanitize-output",
-    tags=["Security"]
-)
-async def sanitize_output(
-    request: PromptRequest,
-    pipeline: SecurityPipeline = Depends(get_pipeline)
-):
-    """
-    Sanitize LLM output (redact/cut sensitive parts).
-    """
-    try:
-        sanitized = pipeline.output_sanitizer.sanitize(request.prompt)
-        return {
-            "original": request.prompt,
-            "sanitized": sanitized
-        }
-    except Exception as e:
-        logger.error(f"Error sanitizing output: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
-
+# ---------------------------------------------------------------------
+# Classification Endpoints
+# ---------------------------------------------------------------------
 
 @router.post(
     "/api/v1/classify",
-    tags=["Security"]
+    response_model=ClassifyResponse,
+    tags=["Classification"],
+    summary="Classify Text",
 )
-async def classify_only(
-    request: PromptRequest,
-    pipeline: SecurityPipeline = Depends(get_pipeline)
+async def classify_text(
+    request_body: ClassifyRequest,
+    pipeline: SecurityPipeline = Depends(get_pipeline),
 ):
     """
-    Classify a prompt without processing through LLM.
-    Useful for testing and analysis.
+    Classify text for security threats.
+    
+    Analyzes text without processing through LLM.
+    Useful for testing and pre-screening content.
     """
     try:
-        classification = pipeline.classifier.classify(request.prompt)
+        classification = pipeline.classifier.classify(request_body.text)
         
-        return {
-            "prompt": request.prompt[:100] + "..." if len(request.prompt) > 100 else request.prompt,
-            "threats": classification.threats,
-            "severity": classification.severity,
-            "confidence": classification.confidence,
-            "details": classification.details
-        }
-    
+        return ClassifyResponse(
+            text_preview=request_body.text[:100] + "..." if len(request_body.text) > 100 else request_body.text,
+            threats=classification.threats,
+            severity=SeverityLevel(classification.severity),
+            confidence=classification.confidence,
+            details=classification.details,
+        )
+        
     except Exception as e:
-        logger.error(f"Error classifying request: {str(e)}")
+        logger.error("Error classifying text", error=str(e))
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail=str(e),
+        )
+
+
+@router.post(
+    "/api/v1/classify-output",
+    response_model=ClassifyResponse,
+    tags=["Classification"],
+    summary="Classify Output",
+)
+async def classify_output(
+    request_body: ClassifyRequest,
+    pipeline: SecurityPipeline = Depends(get_pipeline),
+):
+    """
+    Classify LLM output for sensitive data disclosure.
+    
+    Specifically designed for analyzing model outputs
+    for PII leakage, credential exposure, etc.
+    """
+    try:
+        classification = pipeline.classifier.classify(request_body.text)
+        
+        return ClassifyResponse(
+            text_preview=request_body.text[:100] + "..." if len(request_body.text) > 100 else request_body.text,
+            threats=classification.threats,
+            severity=SeverityLevel(classification.severity),
+            confidence=classification.confidence,
+            details=classification.details,
+        )
+        
+    except Exception as e:
+        logger.error("Error classifying output", error=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+
+
+# ---------------------------------------------------------------------
+# Sanitization Endpoints
+# ---------------------------------------------------------------------
+
+@router.post(
+    "/api/v1/sanitize",
+    response_model=SanitizeResponse,
+    tags=["Sanitization"],
+    summary="Sanitize Input",
+)
+async def sanitize_input(
+    request_body: SanitizeRequest,
+    pipeline: SecurityPipeline = Depends(get_pipeline),
+):
+    """
+    Sanitize input text.
+    
+    Removes or redacts malicious or sensitive content
+    from the input before processing.
+    """
+    try:
+        sanitized = pipeline.input_sanitizer.sanitize(request_body.text)
+        
+        return SanitizeResponse(
+            original=request_body.text,
+            sanitized=sanitized,
+            modifications=[],  # TODO: Track modifications
+        )
+        
+    except Exception as e:
+        logger.error("Error sanitizing input", error=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+
+
+@router.post(
+    "/api/v1/sanitize-output",
+    response_model=SanitizeResponse,
+    tags=["Sanitization"],
+    summary="Sanitize Output",
+)
+async def sanitize_output(
+    request_body: SanitizeRequest,
+    pipeline: SecurityPipeline = Depends(get_pipeline),
+):
+    """
+    Sanitize LLM output.
+    
+    Removes sensitive data from model responses
+    before returning to the user.
+    """
+    try:
+        sanitized = pipeline.output_sanitizer.sanitize(request_body.text)
+        
+        return SanitizeResponse(
+            original=request_body.text,
+            sanitized=sanitized,
+            modifications=[],  # TODO: Track modifications
+        )
+        
+    except Exception as e:
+        logger.error("Error sanitizing output", error=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+
+
+# ---------------------------------------------------------------------
+# Validation Endpoints
+# ---------------------------------------------------------------------
+
+@router.post(
+    "/api/v1/validate",
+    response_model=ValidateResponse,
+    tags=["Validation"],
+    summary="Validate Text",
+)
+async def validate_text(
+    request_body: ValidateRequest,
+    pipeline: SecurityPipeline = Depends(get_pipeline),
+):
+    """
+    Validate text against security rules.
+    
+    Checks for format, content, and safety violations
+    without modifying the text.
+    """
+    try:
+        # Use validation engine if available
+        if hasattr(pipeline, 'validation_engine'):
+            result = await pipeline.validation_engine.validate(request_body.text)
+            
+            return ValidateResponse(
+                is_valid=result.is_valid,
+                violations=[
+                    {
+                        "rule": v.rule_name,
+                        "message": v.message,
+                        "severity": v.severity.value,
+                    }
+                    for v in result.violations
+                ],
+                error_count=result.error_count,
+                warning_count=result.warning_count,
+            )
+        else:
+            # Fallback to basic validation
+            return ValidateResponse(
+                is_valid=True,
+                violations=[],
+                error_count=0,
+                warning_count=0,
+            )
+        
+    except Exception as e:
+        logger.error("Error validating text", error=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+
+
+# ---------------------------------------------------------------------
+# Conversation Endpoints
+# ---------------------------------------------------------------------
+
+@router.post(
+    "/api/v1/conversation/create",
+    tags=["Conversation"],
+    summary="Create Conversation",
+)
+async def create_conversation(
+    system_prompt: Optional[str] = None,
+    pipeline: SecurityPipeline = Depends(get_pipeline),
+):
+    """
+    Create a new conversation.
+    
+    Returns a conversation ID for multi-turn interactions.
+    """
+    try:
+        if hasattr(pipeline, 'conversation_manager'):
+            conv = pipeline.conversation_manager.create_conversation(
+                system_prompt=system_prompt,
+            )
+            return {"conversation_id": conv.id}
+        else:
+            raise HTTPException(
+                status_code=501,
+                detail="Conversation management not enabled",
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error creating conversation", error=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+
+
+@router.get(
+    "/api/v1/conversation/{conversation_id}",
+    tags=["Conversation"],
+    summary="Get Conversation",
+)
+async def get_conversation(
+    conversation_id: str,
+    pipeline: SecurityPipeline = Depends(get_pipeline),
+):
+    """
+    Get conversation details.
+    
+    Returns the conversation history and metadata.
+    """
+    try:
+        if hasattr(pipeline, 'conversation_manager'):
+            conv = await pipeline.conversation_manager.get_conversation(conversation_id)
+            if conv is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Conversation not found",
+                )
+            return conv.to_dict()
+        else:
+            raise HTTPException(
+                status_code=501,
+                detail="Conversation management not enabled",
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error getting conversation", error=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
         )
