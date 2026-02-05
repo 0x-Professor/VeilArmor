@@ -168,7 +168,8 @@ async def main():
     
     print(f"Action: {result.action}")
     print(f"Response: {result.response}")
-    print(f"Threats: {result.threats}")
+    print(f"Threats: {result.threats_detected}")
+    print(f"Severity: {result.severity}")
 
 asyncio.run(main())
 ```
@@ -260,12 +261,16 @@ cache:
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/health` | GET | Health check |
-| `/metrics` | GET | Prometheus metrics |
+| `/metrics` | GET | System metrics |
 | `/api/v1/process` | POST | Process prompt through pipeline |
 | `/api/v1/chat` | POST | Multi-turn chat |
-| `/api/v1/classify` | POST | Classify text for threats |
+| `/api/v1/classify` | POST | Classify input text for threats |
+| `/api/v1/classify-output` | POST | Classify LLM output for issues |
 | `/api/v1/sanitize` | POST | Sanitize input text |
+| `/api/v1/sanitize-output` | POST | Sanitize LLM output text |
 | `/api/v1/validate` | POST | Validate LLM response |
+| `/api/v1/conversation/create` | POST | Create conversation session |
+| `/api/v1/conversation/{id}` | GET | Get conversation details |
 
 See [docs/API_REFERENCE.md](docs/API_REFERENCE.md) for complete API documentation.
 
@@ -322,11 +327,15 @@ VeilArmor/
 ├── src/
 │   ├── api/                   # FastAPI server
 │   ├── cache/                 # Semantic caching
-│   ├── classifier/            # Threat classification
+│   ├── classifiers/           # Threat classification engine
+│   ├── config/                # Configuration management
 │   ├── conversation/          # Conversation management
-│   ├── core/                  # Pipeline and config
+│   ├── core/                  # Pipeline and core config
+│   ├── decision/              # Decision engine & scoring
 │   ├── llm/                   # LLM gateway
-│   ├── sanitizer/             # Input/output sanitization
+│   ├── logging/               # Structured logging
+│   ├── processing/            # Input processing pipeline
+│   ├── sanitization/          # Input/output sanitization
 │   ├── utils/                 # Utilities
 │   └── validation/            # Response validation
 ├── tests/                     # Test suite
