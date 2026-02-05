@@ -5,19 +5,15 @@ VeilArmor v2.0 - Sanitization Example
 This example demonstrates input and output sanitization.
 """
 
-from src.core.config import Settings
-from src.sanitizer import InputSanitizer, OutputSanitizer
+from src.sanitization import InputSanitizer, OutputSanitizer
 
 
 def main():
     """Demonstrate sanitization capabilities."""
-    
-    # Load settings
-    settings = Settings()
-    
-    # Create sanitizers
-    input_sanitizer = InputSanitizer(settings)
-    output_sanitizer = OutputSanitizer(settings)
+
+    # Create sanitizers (no settings argument needed)
+    input_sanitizer = InputSanitizer()
+    output_sanitizer = OutputSanitizer()
     
     print("=" * 60)
     print("VeilArmor v2.0 - Sanitization Example")
@@ -51,45 +47,45 @@ def main():
     for text, description in input_examples:
         print(f"\n[{description}]")
         print(f"  Original: {text}")
-        
+
         result = input_sanitizer.sanitize(text)
-        
+
         print(f"  Sanitized: {result.sanitized_text}")
-        print(f"  Modifications: {result.modifications_made}")
-        
-        if result.redactions:
-            print(f"  Redactions: {len(result.redactions)} items")
-    
+        print(f"  Modified: {result.was_modified}")
+
+        if result.changes:
+            print(f"  Changes: {len(result.changes)} items")
+
     # Output sanitization examples
     print("\n\n--- OUTPUT SANITIZATION ---")
-    
+
     output_examples = [
         # Sensitive data in response
         ("Here is your password: secretpassword123",
          "Password in Response"),
-        
+
         # PII leakage
         ("The user's SSN is 987-65-4321 and email is private@secret.com",
          "PII Leakage"),
-        
+
         # System information
         ("The database password is stored in /etc/secrets/db.conf",
          "System Information"),
-        
+
         # Clean response
         ("The capital of France is Paris, a beautiful city.",
          "Clean Response"),
     ]
-    
+
     for text, description in output_examples:
         print(f"\n[{description}]")
         print(f"  Original: {text}")
-        
+
         result = output_sanitizer.sanitize(text)
-        
+
         print(f"  Sanitized: {result.sanitized_text}")
-        print(f"  Modifications: {result.modifications_made}")
-    
+        print(f"  Modified: {result.was_modified}")
+
     print("\n" + "=" * 60)
     print("Sanitization example completed!")
     print("=" * 60)

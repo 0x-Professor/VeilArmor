@@ -5,23 +5,30 @@ VeilArmor v2.0 - Classification Example
 This example demonstrates threat classification capabilities.
 """
 
-from src.core.config import Settings
-from src.classifier import ThreatClassifier
+import asyncio
+from src.classifiers.manager import ClassifierManager
+from src.classifiers.input import (
+    PromptInjectionClassifier,
+    JailbreakClassifier,
+    PIIDetectorClassifier,
+    AdversarialAttackClassifier,
+)
 
 
-def main():
+async def main():
     """Demonstrate threat classification."""
-    
-    # Load settings
-    settings = Settings()
-    
-    # Create classifier
-    classifier = ThreatClassifier(settings)
-    
+
+    # Create classifier manager and register classifiers
+    manager = ClassifierManager(parallel_execution=True)
+    manager.register(PromptInjectionClassifier())
+    manager.register(JailbreakClassifier())
+    manager.register(PIIDetectorClassifier())
+    manager.register(AdversarialAttackClassifier())
+
     print("=" * 60)
     print("VeilArmor v2.0 - Threat Classification Example")
     print("=" * 60)
-    
+
     # Test prompts
     test_prompts = [
         # Clean prompts
@@ -49,23 +56,22 @@ def main():
     for prompt, description in test_prompts:
         print(f"\n[{description}]")
         print(f"  Prompt: {prompt[:50]}{'...' if len(prompt) > 50 else ''}")
-        
-        result = classifier.classify(prompt)
-        
-        print(f"  Severity: {result.severity}")
-        print(f"  Confidence: {result.confidence:.2%}")
-        
-        if result.threats:
-            print(f"  Threats: {', '.join(result.threats)}")
-        
-        if result.details:
-            for key, value in list(result.details.items())[:3]:
-                print(f"  {key}: {value}")
-    
+
+        result = await manager.classify_input(prompt)
+
+        print(f"  Max Severity: {result.max_severity:.2f}")
+        print(f"  Aggregated Score: {result.aggregated_score:.2%}")
+
+        threats = result.get_threats()
+        if threats:
+            print(f"  Threats: {', '.join(t.threat_type for t in threats)}")
+        else:
+            print("  No threats detected.")
+
     print("\n" + "=" * 60)
     print("Classification example completed!")
     print("=" * 60)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
