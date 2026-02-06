@@ -170,13 +170,13 @@ class LiteLLMProvider(BaseLLM):
                 "top_p": request.top_p,
             }
             
-            if request.max_tokens:
+            if request.max_tokens is not None:
                 kwargs["max_tokens"] = request.max_tokens
             if request.stop:
                 kwargs["stop"] = request.stop
-            if request.frequency_penalty:
+            if request.frequency_penalty is not None:
                 kwargs["frequency_penalty"] = request.frequency_penalty
-            if request.presence_penalty:
+            if request.presence_penalty is not None:
                 kwargs["presence_penalty"] = request.presence_penalty
             if self.base_url:
                 kwargs["base_url"] = self.base_url
