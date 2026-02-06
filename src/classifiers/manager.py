@@ -15,7 +15,6 @@ from src.classifiers.base import BaseClassifier, ClassificationResult, Classifie
 from src.config import get_settings
 from src.logging import get_logger
 from src import Layers
-from src.utils.exceptions import ClassifierNotFoundError, ClassifierTimeoutError
 
 logger = get_logger(__name__, layer=Layers.CLASSIFICATION_ENGINE)
 
@@ -362,6 +361,22 @@ class ClassifierManager:
                     error_message=f"Timeout after {classifier.timeout_seconds}s",
                     processing_time_ms=classifier.timeout_seconds * 1000,
                 )
+            
+            except Exception as e:
+                logger.error(
+                    "Classifier execution error",
+                    component=classifier.name,
+                    error=str(e),
+                )
+                
+                if circuit_breaker:
+                    circuit_breaker.record_failure()
+                
+                return ClassificationResult.error_result(
+                    threat_type=classifier.threat_type,
+                    classifier_name=classifier.name,
+                    error_message=str(e),
+                )
     
     def _calculate_aggregated_score(
         self,
@@ -371,7 +386,10 @@ class ClassifierManager:
         """
         Calculate weighted aggregated score.
         
-        Formula: sum(severity * weight * confidence) / sum(weight)
+        Only threat results contribute to the score. Non-threat and error
+        results are excluded so they don't dilute the aggregated score.
+        
+        Formula: sum(severity * weight * confidence) / sum(weight) for threats only
         
         Args:
             results: Classification results
@@ -387,6 +405,9 @@ class ClassifierManager:
         classifier_lookup = {c.name: c for c in classifiers}
         
         for result in results:
+            # Skip non-threat and error results to avoid diluting the score
+            if not result.is_threat or result.metadata.get("status") == "error":
+                continue
             classifier = classifier_lookup.get(result.classifier_name)
             if classifier:
                 weight = classifier.weight
@@ -509,6 +530,10 @@ class ClassifierManager:
                         component=classifier.name,
                         error=str(result),
                     )
+                    # Record failure on circuit breaker
+                    cb = self._circuit_breakers.get(classifier.name)
+                    if cb:
+                        cb.record_failure()
                     aggregated.add_result(
                         ClassificationResult.error_result(
                             threat_type=classifier.threat_type,
