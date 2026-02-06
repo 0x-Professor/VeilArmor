@@ -187,10 +187,11 @@ class BaseSanitizer(ABC):
         
         for strategy in self._strategies:
             sanitized, changes = strategy.apply(text, context)
-            if changes:
+            if sanitized != text:
                 text = sanitized
-                all_changes.extend(changes)
                 applied_strategies.append(strategy.name)
+            if changes:
+                all_changes.extend(changes)
         
         return text, all_changes, applied_strategies
 
