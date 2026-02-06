@@ -220,7 +220,7 @@ class BiasDetectorClassifier(BaseClassifier):
         weighted_severity = weighted_sum / total_weight if total_weight > 0 else 0
         
         # Final severity
-        severity = max(0.1, max(max_severity, weighted_severity, avg_severity) - balance_reduction)
+        severity = max(0.0, max(max_severity, weighted_severity, avg_severity) - balance_reduction)
         
         # Multi-category boost
         if len(active_categories) > 1:
