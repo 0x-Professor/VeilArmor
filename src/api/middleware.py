@@ -164,21 +164,36 @@ class RateLimiter:
         now: float,
     ) -> Tuple[bool, Dict[str, Any]]:
         """Sliding window rate limiting."""
-        window_start = now - 60
-        
-        # Decay old counts
+        # Decay old counts based on elapsed time
         if state.last_refill > 0:
             elapsed = now - state.last_refill
             decay_factor = max(0, 1 - (elapsed / 60))
             state.minute_count = int(state.minute_count * decay_factor)
         
         state.last_refill = now
+        state.minute_reset = now + 60
         
-        # Check limit
+        # Also decay and check hour/day windows
+        if state.hour_reset == 0.0 or now >= state.hour_reset:
+            state.hour_count = 0
+            state.hour_reset = now + 3600
+        if state.day_reset == 0.0 or now >= state.day_reset:
+            state.day_count = 0
+            state.day_reset = now + 86400
+        
+        # Check all limits
         if state.minute_count >= self.config.requests_per_minute:
             return False, self._make_headers(state, "minute")
         
+        if state.hour_count >= self.config.requests_per_hour:
+            return False, self._make_headers(state, "hour")
+        
+        if state.day_count >= self.config.requests_per_day:
+            return False, self._make_headers(state, "day")
+        
         state.minute_count += 1
+        state.hour_count += 1
+        state.day_count += 1
         
         return True, self._make_headers(state, "minute")
     
@@ -408,10 +423,11 @@ class Authenticator:
             return False, None, "Invalid timestamp"
         
         # Verify signature
+        # Note: request.body() returns cached body if already read by FastAPI
         body = await request.body()
         message = f"{timestamp}{request.method}{request.url.path}{body.decode()}"
         
-        expected = hmac.new(
+        expected = hmac.HMAC(
             self.config.secret_key.encode(),
             message.encode(),
             hashlib.sha256,
