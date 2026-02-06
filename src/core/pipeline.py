@@ -43,6 +43,20 @@ class Severity(str, Enum):
     HIGH = "HIGH"
     CRITICAL = "CRITICAL"
 
+    @property
+    def level(self) -> int:
+        """Numeric level for ordering (higher = more severe)."""
+        return _SEVERITY_ORDER.get(self, 0)
+
+
+_SEVERITY_ORDER = {
+    Severity.NONE: 0,
+    Severity.LOW: 1,
+    Severity.MEDIUM: 2,
+    Severity.HIGH: 3,
+    Severity.CRITICAL: 4,
+}
+
 
 class PipelineStage(str, Enum):
     """Pipeline processing stages."""
@@ -720,7 +734,7 @@ class SecurityPipeline:
                         ctx.output_classification.max_severity
                     )
                     # Escalate severity if output is worse than input
-                    if output_severity.value > ctx.severity.value:
+                    if output_severity.level > ctx.severity.level:
                         ctx.severity = output_severity
                     logger.warning(
                         f"Output threats detected for {ctx.request_id}: {output_threats}"
