@@ -301,7 +301,7 @@ def timing_decorator(func: Callable[..., T]) -> Callable[..., T]:
     return wrapper
 
 
-async def async_timing_decorator(func: Callable[..., T]) -> Callable[..., T]:
+def async_timing_decorator(func: Callable[..., T]) -> Callable[..., T]:
     """
     Async decorator to measure function execution time.
     
