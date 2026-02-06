@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Metrics Collection
+VeilArmor - Metrics Collection
 
 Collects and exposes metrics for monitoring and observability.
 Supports Prometheus-compatible metrics format.

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Semantic Cache
+VeilArmor - Semantic Cache
 
 Semantic similarity-based caching for LLM responses.
 """

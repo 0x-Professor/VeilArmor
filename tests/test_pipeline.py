@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Pipeline Tests
+VeilArmor - Pipeline Tests
 
 Tests for the security pipeline.
 """

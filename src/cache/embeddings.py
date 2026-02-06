@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Embedding Providers
+VeilArmor - Embedding Providers
 
 Embedding providers for semantic similarity matching.
 """

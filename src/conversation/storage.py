@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Conversation Storage
+VeilArmor - Conversation Storage
 
 Storage backends for conversation persistence.
 """

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - LLM Gateway
+VeilArmor - LLM Gateway
 
 Routes requests to appropriate LLM provider with load balancing,
 fallback, and circuit breaker support.

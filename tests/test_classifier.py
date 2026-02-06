@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Classifier Tests
+VeilArmor - Classifier Tests
 
 Comprehensive tests for threat classification using the ClassifierManager
 and individual classifier modules.

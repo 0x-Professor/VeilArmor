@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Output Classifiers Module
+VeilArmor - Output Classifiers Module
 
 Output classifiers for detecting threats in LLM responses:
 - Content Safety

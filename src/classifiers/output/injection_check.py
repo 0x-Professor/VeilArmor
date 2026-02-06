@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Injection Check Classifier
+VeilArmor - Injection Check Classifier
 
 Detects if the LLM output itself contains injection attempts
 that could be harmful if passed to downstream systems.

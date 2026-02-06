@@ -1,6 +1,6 @@
 # Pydantic request/response models
 """
-VeilArmor v2.0 - API Models
+VeilArmor - API Models
 
 Pydantic models for API requests and responses.
 """

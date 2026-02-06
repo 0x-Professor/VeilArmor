@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Bias Detector Classifier
+VeilArmor - Bias Detector Classifier
 
 Detects potential bias in LLM outputs including gender, racial,
 age, and other demographic biases.

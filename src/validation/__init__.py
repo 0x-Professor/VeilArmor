@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Output Validation Module
+VeilArmor - Output Validation Module
 
 Provides response validation and quality checks.
 """

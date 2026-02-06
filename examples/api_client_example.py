@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VeilArmor v2.0 - API Client Example
+VeilArmor - API Client Example
 
 This example demonstrates how to interact with the VeilArmor API.
 """
@@ -156,7 +156,7 @@ async def main():
     """Main function demonstrating API client usage."""
     
     print("=" * 60)
-    print("VeilArmor v2.0 - API Client Example")
+    print("VeilArmor - API Client Example")
     print("=" * 60)
     
     async with VeilArmorClient(

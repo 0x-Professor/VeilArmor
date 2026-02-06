@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Input Preprocessor
+VeilArmor - Input Preprocessor
 
 Preprocesses input before classification and LLM processing.
 """

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Logging Module
+VeilArmor - Logging Module
 
 Enterprise-grade logging system with correlation IDs, structured logging,
 colored console output, and comprehensive layer-based tracking.

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Decision Engine
+VeilArmor - Decision Engine
 
 Main decision-making engine that combines scoring, thresholds, and rules
 to determine the appropriate action for classified content.

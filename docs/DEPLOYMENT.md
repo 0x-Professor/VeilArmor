@@ -1,4 +1,4 @@
-# VeilArmor v2.0 - Deployment Guide
+# VeilArmor - Deployment Guide
 
 ## Overview
 

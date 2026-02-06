@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Input Sanitizer
+VeilArmor - Input Sanitizer
 
 Sanitizes user inputs before processing.
 """

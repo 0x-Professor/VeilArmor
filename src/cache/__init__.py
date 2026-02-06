@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Cache Module
+VeilArmor - Cache Module
 
 Semantic caching with Redis and sentence-transformers.
 """

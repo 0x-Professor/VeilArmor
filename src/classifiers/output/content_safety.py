@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Content Safety Classifier
+VeilArmor - Content Safety Classifier
 
 Analyzes LLM outputs for content safety violations including
 harmful content, inappropriate material, and policy violations.

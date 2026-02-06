@@ -1,4 +1,4 @@
-# VeilArmor v2.0 Docker Compose
+# VeilArmor Docker Compose
 # Enterprise LLM Security Framework
 
 version: '3.8'

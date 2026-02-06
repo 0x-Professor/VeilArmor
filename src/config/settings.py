@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Settings Management
+VeilArmor - Settings Management
 
 Centralized configuration management with support for:
 - Environment variables

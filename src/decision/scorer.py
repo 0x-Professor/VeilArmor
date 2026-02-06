@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Scorer
+VeilArmor - Scorer
 
 Scoring strategies for aggregating classification results.
 """

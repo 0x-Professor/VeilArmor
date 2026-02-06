@@ -1,4 +1,4 @@
-# VeilArmor v2.0 - Prometheus Configuration
+# VeilArmor - Prometheus Configuration
 global:
   scrape_interval: 15s
   evaluation_interval: 15s

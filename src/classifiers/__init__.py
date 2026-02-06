@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Classifiers Module
+VeilArmor - Classifiers Module
 
 Provides modular threat classification with parallel execution support.
 

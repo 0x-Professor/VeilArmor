@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Context Management
+VeilArmor - Context Management
 
 Context strategies for conversation management.
 """

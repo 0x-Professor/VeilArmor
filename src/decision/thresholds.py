@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Threshold Manager
+VeilArmor - Threshold Manager
 
 Manages decision thresholds for different threat types and actions.
 """

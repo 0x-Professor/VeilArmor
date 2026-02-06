@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Sanitization Manager
+VeilArmor - Sanitization Manager
 
 Orchestrates input and output sanitization with caching and metrics.
 """

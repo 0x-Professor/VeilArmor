@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VeilArmor v2.0 - Basic Usage Example
+VeilArmor - Basic Usage Example
 
 This example demonstrates the basic usage of VeilArmor for
 protecting LLM interactions.
@@ -21,7 +21,7 @@ async def main():
     pipeline = create_pipeline(settings)
     
     print("=" * 60)
-    print("VeilArmor v2.0 - Basic Usage Example")
+    print("VeilArmor - Basic Usage Example")
     print("=" * 60)
     
     # Example 1: Process a clean prompt

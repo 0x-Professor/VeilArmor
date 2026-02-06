@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Base LLM Interface
+VeilArmor - Base LLM Interface
 
 Abstract base classes for LLM providers.
 """

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - API Middleware
+VeilArmor - API Middleware
 
 Middleware for rate limiting, authentication, and request tracking.
 """

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VeilArmor v2.0 - Main Entry Point
+VeilArmor - Main Entry Point
 
 Enterprise-grade LLM security framework providing multi-layered
 protection against prompt injections, jailbreaks, PII leakage,
@@ -28,7 +28,7 @@ from src.utils.logger import setup_logging, get_logger
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="VeilArmor v2.0 - LLM Security Framework",
+        description="VeilArmor - LLM Security Framework",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

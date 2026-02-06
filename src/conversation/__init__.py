@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Conversation Module
+VeilArmor - Conversation Module
 
 Multi-turn conversation management with context handling.
 """

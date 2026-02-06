@@ -1,4 +1,4 @@
-# VeilArmor v2.0 RBAC Configuration
+# VeilArmor RBAC Configuration
 apiVersion: v1
 kind: ServiceAccount
 metadata:

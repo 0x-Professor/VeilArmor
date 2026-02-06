@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Sanitization Base
+VeilArmor - Sanitization Base
 
 Base classes for sanitization with strategy pattern support.
 """

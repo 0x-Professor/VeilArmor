@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Conversation Manager
+VeilArmor - Conversation Manager
 
 Manages multi-turn conversations with security context.
 """

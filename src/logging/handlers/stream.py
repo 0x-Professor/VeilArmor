@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Stream Logging Handler
+VeilArmor - Stream Logging Handler
 
 Provides console/stream logging with optional color support.
 """

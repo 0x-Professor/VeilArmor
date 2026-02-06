@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Logging Handlers Module
+VeilArmor - Logging Handlers Module
 """
 
 from src.logging.handlers.file import FileHandler, RotatingFileHandler

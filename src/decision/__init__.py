@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Decision Engine Module
+VeilArmor - Decision Engine Module
 
 Scoring, decision-making, and action determination based on classification results.
 """

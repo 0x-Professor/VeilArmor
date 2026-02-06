@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Logging Formatters Module
+VeilArmor - Logging Formatters Module
 """
 
 from src.logging.formatters.json_formatter import JSONFormatter

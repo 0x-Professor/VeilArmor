@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Logging Configuration
+VeilArmor - Logging Configuration
 
 Configures structured logging with multiple handlers, colored console output,
 JSON file logging, and integration with correlation IDs.

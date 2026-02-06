@@ -1,4 +1,4 @@
-# VeilArmor v2.0 Kubernetes Deployment
+# VeilArmor Kubernetes Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VeilArmor v2.0 - Classification Example
+VeilArmor - Classification Example
 
 This example demonstrates threat classification capabilities.
 """
@@ -26,7 +26,7 @@ async def main():
     manager.register(AdversarialAttackClassifier())
 
     print("=" * 60)
-    print("VeilArmor v2.0 - Threat Classification Example")
+    print("VeilArmor - Threat Classification Example")
     print("=" * 60)
 
     # Test prompts

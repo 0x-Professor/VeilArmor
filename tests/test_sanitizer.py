@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Sanitizer Tests
+VeilArmor - Sanitizer Tests
 
 Tests for input and output sanitization.
 """

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - JSON Log Formatter
+VeilArmor - JSON Log Formatter
 
 Provides structured JSON formatting for log records.
 """

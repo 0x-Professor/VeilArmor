@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Toxicity Classifier
+VeilArmor - Toxicity Classifier
 
 Detects toxic content including profanity, harassment,
 threats, and abusive language.

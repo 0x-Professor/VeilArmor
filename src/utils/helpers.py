@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Utility Helpers
+VeilArmor - Utility Helpers
 
 This module provides common utility functions used across the VeilArmor framework.
 """

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Classifier Manager
+VeilArmor - Classifier Manager
 
 Manages parallel execution of multiple classifiers with proper error handling,
 circuit breaker pattern, and result aggregation.

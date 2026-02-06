@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Input Normalizer
+VeilArmor - Input Normalizer
 
 Normalizes input for consistent classification and processing.
 """

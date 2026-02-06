@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Rule Engine
+VeilArmor - Rule Engine
 
 Configurable rule-based decision making with conditions and actions.
 """

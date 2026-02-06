@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - File Logging Handler
+VeilArmor - File Logging Handler
 
 Provides file-based logging with rotation support.
 """

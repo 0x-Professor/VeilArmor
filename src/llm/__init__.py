@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - LLM Module
+VeilArmor - LLM Module
 
 LLM provider abstraction with multi-provider support via LiteLLM.
 """

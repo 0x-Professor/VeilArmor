@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Sanitization Module
+VeilArmor - Sanitization Module
 
 Input and output sanitization with strategy-based approach.
 """

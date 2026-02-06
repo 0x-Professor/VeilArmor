@@ -1,4 +1,4 @@
-# VeilArmor v2.0 - Enterprise LLM Security Framework
+# VeilArmor - Enterprise LLM Security Framework
 # Python 3.11+ required
 
 # Web Framework

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Sensitive Content Classifier
+VeilArmor - Sensitive Content Classifier
 
 Detects sensitive content categories including violence, hate speech,
 self-harm, weapons, illegal activities, and adult content.

@@ -1,6 +1,6 @@
 # API endpoints
 """
-VeilArmor v2.0 - API Routes
+VeilArmor - API Routes
 
 Comprehensive API endpoints for the security framework.
 """

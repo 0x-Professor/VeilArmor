@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - JSON Logging Handler
+VeilArmor - JSON Logging Handler
 
 Provides structured JSON logging output.
 """

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - PII Detector Classifier
+VeilArmor - PII Detector Classifier
 
 Detects Personally Identifiable Information (PII) exposure
 including emails, phone numbers, SSN, credit cards, etc.

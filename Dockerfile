@@ -1,4 +1,4 @@
-# VeilArmor v2.0 Dockerfile
+# VeilArmor Dockerfile
 # Enterprise LLM Security Framework
 
 # Build stage

@@ -1,5 +1,5 @@
 # =============================================================================
-# VeilArmor v2.0 - Main Configuration
+# VeilArmor - Main Configuration
 # =============================================================================
 # This is the main configuration file for VeilArmor.
 # Environment variables can override these settings using VEILARMOR_ prefix.

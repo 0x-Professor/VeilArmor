@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Jailbreak Classifier
+VeilArmor - Jailbreak Classifier
 
 Detects jailbreak attempts that try to bypass AI safety measures
 using various manipulation techniques.

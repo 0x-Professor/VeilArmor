@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Test Suite
+VeilArmor - Test Suite
 
 Comprehensive test suite for the VeilArmor LLM security framework.
 

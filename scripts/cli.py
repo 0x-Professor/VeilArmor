@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VeilArmor v2.0 - Command Line Interface
+VeilArmor - Command Line Interface
 
 Provides CLI commands for managing and interacting with VeilArmor.
 """

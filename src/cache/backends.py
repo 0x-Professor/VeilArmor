@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Cache Backends
+VeilArmor - Cache Backends
 
 Storage backends for caching with TTL support.
 """

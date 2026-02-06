@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Validation Rules
+VeilArmor - Validation Rules
 
 Configurable rules for response validation.
 """

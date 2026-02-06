@@ -1,4 +1,4 @@
-# VeilArmor v2.0 Kubernetes Service and Ingress
+# VeilArmor Kubernetes Service and Ingress
 apiVersion: v1
 kind: Service
 metadata:

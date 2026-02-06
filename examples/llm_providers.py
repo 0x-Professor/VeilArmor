@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VeilArmor v2.0 - LLM Provider Example
+VeilArmor - LLM Provider Example
 
 This example demonstrates how to configure and use different
 LLM providers with VeilArmor.
@@ -21,7 +21,7 @@ async def main():
     """Demonstrate LLM provider configuration."""
 
     print("=" * 60)
-    print("VeilArmor v2.0 - LLM Provider Example")
+    print("VeilArmor - LLM Provider Example")
     print("=" * 60)
 
     # Create gateway with a dummy provider for demonstration

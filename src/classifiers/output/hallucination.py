@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Hallucination Classifier
+VeilArmor - Hallucination Classifier
 
 Detects potential hallucination indicators in LLM outputs
 including fabricated facts, inconsistencies, and overconfidence.

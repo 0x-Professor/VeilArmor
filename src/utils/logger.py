@@ -1,6 +1,6 @@
 # Logging utility
 """
-VeilArmor v2.0 - Logging Utility
+VeilArmor - Logging Utility
 
 Provides structured logging with colored output.
 """

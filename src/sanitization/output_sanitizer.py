@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Output Sanitizer
+VeilArmor - Output Sanitizer
 
 Sanitizes LLM outputs before returning to users.
 """

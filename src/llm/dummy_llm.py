@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Dummy LLM Provider
+VeilArmor - Dummy LLM Provider
 
 Testing and development provider that returns mock responses.
 """

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Sanitization Strategies
+VeilArmor - Sanitization Strategies
 
 Concrete sanitization strategies for different threat types.
 """

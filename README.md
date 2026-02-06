@@ -1,4 +1,4 @@
-# VeilArmor v2.0
+# VeilArmor
 
 **Enterprise-Grade LLM Security Framework**
 

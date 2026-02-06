@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - API Module
+VeilArmor - API Module
 
 FastAPI server with middleware, routes, and models.
 """

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Input Processor
+VeilArmor - Input Processor
 
 Orchestrates the complete input processing pipeline.
 """

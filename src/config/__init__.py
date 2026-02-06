@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Configuration Module
+VeilArmor - Configuration Module
 """
 
 from src.config.settings import (

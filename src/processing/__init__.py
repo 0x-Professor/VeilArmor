@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Input Processing Module
+VeilArmor - Input Processing Module
 
 Provides input validation, preprocessing, and normalization.
 """

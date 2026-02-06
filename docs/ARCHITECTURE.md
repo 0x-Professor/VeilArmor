@@ -1,4 +1,4 @@
-# VeilArmor v2.0 - Architecture Guide
+# VeilArmor - Architecture Guide
 
 ## Overview
 

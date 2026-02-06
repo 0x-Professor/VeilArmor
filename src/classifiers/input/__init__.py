@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Input Classifiers Module
+VeilArmor - Input Classifiers Module
 
 Input classifiers for detecting threats in user inputs:
 - Prompt Injection

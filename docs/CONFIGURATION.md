@@ -1,4 +1,4 @@
-# VeilArmor v2.0 - Configuration Reference
+# VeilArmor - Configuration Reference
 
 ## Overview
 
@@ -14,7 +14,7 @@ VeilArmor uses a hierarchical configuration system that supports:
 
 ```yaml
 # =============================================================================
-# VeilArmor v2.0 Configuration
+# VeilArmor Configuration
 # =============================================================================
 
 app:

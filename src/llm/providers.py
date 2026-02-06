@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - LiteLLM Provider
+VeilArmor - LiteLLM Provider
 
 Unified LLM provider using LiteLLM for multi-provider support.
 """

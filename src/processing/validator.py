@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Input Validator
+VeilArmor - Input Validator
 
 Validates input against configurable rules before processing.
 """

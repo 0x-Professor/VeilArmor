@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Validation Engine
+VeilArmor - Validation Engine
 
 Central engine for orchestrating response validation.
 """

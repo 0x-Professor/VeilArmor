@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Core Module
+VeilArmor - Core Module
 
 Pipeline orchestration and configuration.
 

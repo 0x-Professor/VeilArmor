@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Custom Exceptions
+VeilArmor - Custom Exceptions
 
 This module defines all custom exceptions used throughout the VeilArmor framework.
 Each exception includes contextual information for debugging and logging.

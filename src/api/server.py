@@ -1,6 +1,6 @@
 # FastAPI main server
 """
-VeilArmor v2.0 - FastAPI Server
+VeilArmor - FastAPI Server
 
 Main server application with middleware and lifecycle management.
 """

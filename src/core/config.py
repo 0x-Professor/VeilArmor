@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Configuration Management
+VeilArmor - Configuration Management
 
 Handles loading and validation of application configuration
 from YAML files and environment variables.

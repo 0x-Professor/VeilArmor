@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Enterprise LLM Security Framework
+VeilArmor - Enterprise LLM Security Framework
 
 A production-ready, modular security framework providing multi-layered protection
 against prompt injections, jailbreaks, PII leakage, adversarial attacks, and

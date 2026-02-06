@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VeilArmor v2.0 - Custom Pipeline Example
+VeilArmor - Custom Pipeline Example
 
 This example demonstrates how to create custom pipelines
 with specific configurations and hooks.
@@ -24,7 +24,7 @@ async def main():
     """Demonstrate custom pipeline configuration."""
 
     print("=" * 60)
-    print("VeilArmor v2.0 - Custom Pipeline Example")
+    print("VeilArmor - Custom Pipeline Example")
     print("=" * 60)
 
     settings = Settings()

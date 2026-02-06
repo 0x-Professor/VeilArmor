@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - PII Leakage Classifier
+VeilArmor - PII Leakage Classifier
 
 Detects PII leakage in LLM outputs that may have been
 unintentionally revealed from training data or context.

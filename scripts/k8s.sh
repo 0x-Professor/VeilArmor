@@ -1,5 +1,5 @@
 #!/bin/bash
-# VeilArmor v2.0 - Kubernetes Deployment Script
+# VeilArmor - Kubernetes Deployment Script
 
 set -e
 

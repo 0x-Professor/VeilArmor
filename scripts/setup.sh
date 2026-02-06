@@ -1,5 +1,5 @@
 #!/bin/bash
-# VeilArmor v2.0 - Development Setup Script
+# VeilArmor - Development Setup Script
 
 set -e
 
@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 
 echo -e "${BLUE}"
 echo "╔═══════════════════════════════════════════════════════════════╗"
-echo "║           VeilArmor v2.0 - Development Setup                  ║"
+echo "║           VeilArmor - Development Setup                  ║"
 echo "╚═══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 

@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Base Classifier
+VeilArmor - Base Classifier
 
 Defines the abstract base class for all classifiers and the ClassificationResult model.
 All classifiers must extend BaseClassifier and implement the classify method.

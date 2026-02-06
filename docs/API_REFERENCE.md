@@ -1,4 +1,4 @@
-# VeilArmor v2.0 - API Reference
+# VeilArmor - API Reference
 
 ## Overview
 

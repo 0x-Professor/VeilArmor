@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Adversarial Attack Classifier
+VeilArmor - Adversarial Attack Classifier
 
 Detects adversarial attacks including text obfuscation,
 encoding manipulations, and evasion techniques.

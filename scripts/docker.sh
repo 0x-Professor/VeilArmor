@@ -1,5 +1,5 @@
 #!/bin/bash
-# VeilArmor v2.0 - Docker Deployment Script
+# VeilArmor - Docker Deployment Script
 
 set -e
 

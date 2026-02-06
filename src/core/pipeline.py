@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Security Pipeline
+VeilArmor - Security Pipeline
 
 Main security pipeline orchestrating the complete security flow:
 Input Processing -> Classification -> Decision -> Sanitization -> LLM -> Output Validation -> Output Sanitization

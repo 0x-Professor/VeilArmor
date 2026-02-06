@@ -1,4 +1,4 @@
-# VeilArmor v2.0 - Installation Guide
+# VeilArmor - Installation Guide
 
 Complete installation guide for VeilArmor - Enterprise LLM Security Framework.
 

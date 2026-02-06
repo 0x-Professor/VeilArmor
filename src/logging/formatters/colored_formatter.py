@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Colored Log Formatter
+VeilArmor - Colored Log Formatter
 
 Provides colored console output for log records.
 """

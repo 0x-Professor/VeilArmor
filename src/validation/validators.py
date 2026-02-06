@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Response Validators
+VeilArmor - Response Validators
 
 Composable validators for different validation aspects.
 """

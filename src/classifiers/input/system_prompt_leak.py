@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - System Prompt Leak Classifier
+VeilArmor - System Prompt Leak Classifier
 
 Detects attempts to extract or reveal system prompts,
 initial instructions, or confidential AI configurations.

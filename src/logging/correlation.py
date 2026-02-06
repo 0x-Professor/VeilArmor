@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Correlation ID Management
+VeilArmor - Correlation ID Management
 
 Manages correlation IDs for request tracing across all layers.
 Uses contextvars for async-safe correlation ID propagation.

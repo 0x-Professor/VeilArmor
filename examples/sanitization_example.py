@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VeilArmor v2.0 - Sanitization Example
+VeilArmor - Sanitization Example
 
 This example demonstrates input and output sanitization.
 """
@@ -16,7 +16,7 @@ def main():
     output_sanitizer = OutputSanitizer()
     
     print("=" * 60)
-    print("VeilArmor v2.0 - Sanitization Example")
+    print("VeilArmor - Sanitization Example")
     print("=" * 60)
     
     # Input sanitization examples

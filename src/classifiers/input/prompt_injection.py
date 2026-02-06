@@ -1,5 +1,5 @@
 """
-VeilArmor v2.0 - Prompt Injection Classifier
+VeilArmor - Prompt Injection Classifier
 
 Detects prompt injection attacks where users attempt to override
 system instructions or manipulate the LLM's behavior.
