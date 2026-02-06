@@ -208,7 +208,7 @@ class HallucinationClassifier(BaseClassifier):
         if has_cutoff_acknowledgment:
             uncertainty_reduction += 0.1
         
-        severity = max(0.1, max(max_severity, avg_severity) - uncertainty_reduction)
+        severity = max(0.0, max(max_severity, avg_severity) - uncertainty_reduction)
         
         # Active categories boost
         active_categories = [c for c, i in indicators.items() if i]
