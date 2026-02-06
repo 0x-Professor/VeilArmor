@@ -239,6 +239,20 @@ class ValidationEngine:
                     validator=validator.name,
                     error=str(e),
                 )
+                # Record a FAILED result so a crashing validator doesn't silently pass content
+                error_violation = RuleViolation(
+                    rule_name=f"{validator.name}_error",
+                    severity=RuleSeverity.ERROR,
+                    category=RuleCategory.SAFETY,
+                    message=f"Validator '{validator.name}' raised an exception: {e}",
+                    context={"exception": str(e)},
+                )
+                validator_results.append(ValidatorResult(
+                    validator_name=validator.name,
+                    status=ValidationStatus.FAILED,
+                    violations=[error_violation],
+                ))
+                all_violations.append(error_violation)
         
         # Determine overall status
         is_valid = all(
