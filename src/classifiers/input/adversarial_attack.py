@@ -215,8 +215,8 @@ class AdversarialAttackClassifier(BaseClassifier):
             raw_score=sum(severity_scores) / len(severity_scores),
             metadata={
                 "indicator_count": len(severity_scores),
-                "invisible_char_count": invisible_count if 'invisible_count' in dir() else 0,
-                "homoglyph_count": homoglyph_count if 'homoglyph_count' in dir() else 0,
+                "invisible_char_count": invisible_count,
+                "homoglyph_count": homoglyph_count,
                 "max_severity": max_severity,
             },
         )
