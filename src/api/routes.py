@@ -225,12 +225,12 @@ async def process_prompt(
         processing_time = (time.time() - start_time) * 1000
         
         return PromptResponse(
-            success=result.success if hasattr(result, 'success') else True,
-            action=ActionType(result.action) if hasattr(result, 'action') else ActionType.ALLOW,
-            response=result.response if hasattr(result, 'response') else None,
-            threats_detected=result.threats_detected if hasattr(result, 'threats_detected') else [],
-            severity=SeverityLevel(result.severity) if hasattr(result, 'severity') else SeverityLevel.NONE,
-            message=result.message if hasattr(result, 'message') else "Processed successfully",
+            success=result.success,
+            action=ActionType(result.action.value),
+            response=result.response,
+            threats_detected=result.threats_detected,
+            severity=SeverityLevel(result.severity.value),
+            message=result.message or "Processed successfully",
             request_id=request_id,
             processing_time_ms=processing_time,
         )
@@ -289,12 +289,13 @@ async def chat_completion(
         
         return ChatResponse(
             id=request_id or "chat_response",
-            content=result.response if hasattr(result, 'response') else "",
+            content=result.response or result.message or "",
             role="assistant",
-            finish_reason="stop",
+            finish_reason="stop" if result.success else "content_filter",
             security={
-                "threats_detected": result.threats_detected if hasattr(result, 'threats_detected') else [],
-                "action": result.action if hasattr(result, 'action') else "ALLOW",
+                "threats_detected": result.threats_detected,
+                "action": result.action.value,
+                "severity": result.severity.value,
             },
         )
         
@@ -509,7 +510,9 @@ async def validate_text(
                 status_code=501,
                 detail="Validation engine not available in current configuration",
             )
-        
+
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error("Error validating text", error=str(e))
         raise HTTPException(
@@ -537,7 +540,7 @@ async def create_conversation(
     Returns a conversation ID for multi-turn interactions.
     """
     try:
-        if hasattr(pipeline, 'conversation_manager'):
+        if pipeline.conversation_manager is not None:
             conv = pipeline.conversation_manager.create_conversation(
                 system_prompt=system_prompt,
             )
@@ -573,7 +576,7 @@ async def get_conversation(
     Returns the conversation history and metadata.
     """
     try:
-        if hasattr(pipeline, 'conversation_manager'):
+        if pipeline.conversation_manager is not None:
             conv = await pipeline.conversation_manager.get_conversation(conversation_id)
             if conv is None:
                 raise HTTPException(
