@@ -63,11 +63,11 @@ class LLMRequest:
         
         if self.model:
             result["model"] = self.model
-        if self.max_tokens:
+        if self.max_tokens is not None:
             result["max_tokens"] = self.max_tokens
-        if self.frequency_penalty:
+        if self.frequency_penalty is not None:
             result["frequency_penalty"] = self.frequency_penalty
-        if self.presence_penalty:
+        if self.presence_penalty is not None:
             result["presence_penalty"] = self.presence_penalty
         if self.stop:
             result["stop"] = self.stop
